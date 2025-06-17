@@ -24,8 +24,8 @@
 ---
 
 ## 2. Database Schema & Entities
-- [ ] Create database migration scripts (Flyway or Liquibase):
-    - [ ] `friend_codes` table with columns:
+- [x] Create database migration scripts (Flyway or Liquibase):
+    - [x] `friend_codes` table with columns:
         - `id` (UUID, primary key)
         - `friend_code` (VARCHAR(12), not null)
         - `trainer_name` (VARCHAR(50), nullable)
@@ -37,13 +37,13 @@
         - `submitted_at` (TIMESTAMP, not null)
         - `expires_at` (TIMESTAMP, not null)
         - `user_fingerprint` (VARCHAR(255), not null, for rate limiting)
-    - [ ] Index on `expires_at` for cleanup queries
-    - [ ] Index on `submitted_at` for sorting
-    - [ ] Index on `user_fingerprint` for rate limit checks
-- [ ] Create JPA Entity classes:
-    - [ ] `FriendCode` entity with validation annotations
-    - [ ] Enum classes for `Team` and `Purpose`
-- [ ] Create Spring Data JPA repositories
+    - [x] Index on `expires_at` for cleanup queries
+    - [x] Index on `submitted_at` for sorting
+    - [x] Index on `user_fingerprint` for rate limit checks
+- [x] Create JPA Entity classes:
+    - [x] `FriendCode` entity with validation annotations
+    - [x] Enum classes for `Team` and `Purpose`
+- [x] Create Spring Data JPA repositories
 
 ---
 
