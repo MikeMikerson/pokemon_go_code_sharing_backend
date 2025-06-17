@@ -1,6 +1,21 @@
-# Backend TODO List: Pokémon Go Friend Code Sharing API (Spring Framework)
-
-## 1. Project Setup & Configuration
+# Backend TODO List: Pokémon Go Friend Code Sharing API (Spring Fram## 4. Core Business Logic Services
+- [x] Create `FriendCodeService`:
+    - [x] Submit friend code logic
+    - [x] Validate all input fields
+    - [x] Generate expiry timestamp (24-48 hours)
+    - [x] Check for expired codes before returning
+- [x] Create `RateLimitService`:
+    - [x] Generate user fingerprint from request (IP + User-Agent hash)
+    - [x] Check if user can submit (24-hour cooldown)
+    - [x] Store submission timestamps in Redis
+    - [x] Calculate next allowed submission time
+- [x] Create `FingerprintService`:
+    - [x] Generate consistent fingerprint from request
+    - [x] Hash IP address for privacy
+    - [x] Include User-Agent in fingerprint
+- [ ] Create `CleanupService`:
+    - [ ] Scheduled task to delete expired codes
+    - [ ] Run every hour or configurable intervalect Setup & Configuration
 - [x] Initialize Spring Boot project with dependencies:
     - [x] Spring Web
     - [x] Spring Data JPA
@@ -72,11 +87,11 @@
     - [x] Validate all input fields
     - [x] Generate expiry timestamp (24-48 hours)
     - [x] Check for expired codes before returning
-- [ ] Create `RateLimitService`:
-    - [ ] Generate user fingerprint from request (IP + User-Agent hash)
-    - [ ] Check if user can submit (24-hour cooldown)
-    - [ ] Store submission timestamps in Redis
-    - [ ] Calculate next allowed submission time
+- [x] Create `RateLimitService`:
+    - [x] Generate user fingerprint from request (IP + User-Agent hash)
+    - [x] Check if user can submit (24-hour cooldown)
+    - [x] Store submission timestamps in Redis
+    - [x] Calculate next allowed submission time
 - [ ] Create `FingerprintService`:
     - [ ] Generate consistent fingerprint from request
     - [ ] Hash IP address for privacy
