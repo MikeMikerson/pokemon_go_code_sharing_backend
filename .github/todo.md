@@ -92,13 +92,13 @@
     - [x] Check if user can submit (24-hour cooldown)
     - [x] Store submission timestamps in Redis
     - [x] Calculate next allowed submission time
-- [ ] Create `FingerprintService`:
-    - [ ] Generate consistent fingerprint from request
-    - [ ] Hash IP address for privacy
-    - [ ] Include User-Agent in fingerprint
-- [ ] Create `CleanupService`:
-    - [ ] Scheduled task to delete expired codes
-    - [ ] Run every hour or configurable interval
+- [x] Create `FingerprintService`:
+    - [x] Generate consistent fingerprint from request
+    - [x] Hash IP address for privacy
+    - [x] Include User-Agent in fingerprint
+- [x] Create `CleanupService`:
+    - [x] Scheduled task to delete expired codes
+    - [x] Run every hour or configurable interval
 
 ---
 
