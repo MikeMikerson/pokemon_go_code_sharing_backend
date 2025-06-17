@@ -48,8 +48,8 @@
 ---
 
 ## 3. API Models & DTOs
-- [ ] Create request/response DTOs matching frontend types:
-    - [ ] `FriendCodeSubmissionRequest` DTO:
+- [x] Create request/response DTOs matching frontend types:
+    - [x] `FriendCodeSubmissionRequest` DTO:
         - `friendCode` (12 digits, validated)
         - `trainerName` (optional, max 50 chars)
         - `trainerLevel` (optional, 1-50)
@@ -57,12 +57,12 @@
         - `country` (optional, predefined list)
         - `purpose` (optional, enum validation)
         - `message` (optional, max 100 chars)
-    - [ ] `FriendCodeResponse` DTO
-    - [ ] `SubmissionResponse` DTO (success, message, nextSubmissionAllowed)
-    - [ ] `FriendCodeFeedResponse` DTO (list, hasMore, nextCursor)
-    - [ ] `ErrorResponse` DTO for standardized errors
-- [ ] Create mapper classes (MapStruct or manual)
-- [ ] Add Jakarta Validation annotations
+    - [x] `FriendCodeResponse` DTO
+    - [x] `SubmissionResponse` DTO (success, message, nextSubmissionAllowed)
+    - [x] `FriendCodeFeedResponse` DTO (list, hasMore, nextCursor)
+    - [x] `ErrorResponse` DTO for standardized errors
+- [x] Create mapper classes (MapStruct or manual)
+- [x] Add Jakarta Validation annotations
 
 ---
 
