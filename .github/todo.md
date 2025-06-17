@@ -67,11 +67,11 @@
 ---
 
 ## 4. Core Business Logic Services
-- [ ] Create `FriendCodeService`:
-    - [ ] Submit friend code logic
-    - [ ] Validate all input fields
-    - [ ] Generate expiry timestamp (24-48 hours)
-    - [ ] Check for expired codes before returning
+- [x] Create `FriendCodeService`:
+    - [x] Submit friend code logic
+    - [x] Validate all input fields
+    - [x] Generate expiry timestamp (24-48 hours)
+    - [x] Check for expired codes before returning
 - [ ] Create `RateLimitService`:
     - [ ] Generate user fingerprint from request (IP + User-Agent hash)
     - [ ] Check if user can submit (24-hour cooldown)
