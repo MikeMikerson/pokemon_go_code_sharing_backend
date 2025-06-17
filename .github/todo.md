@@ -7,17 +7,19 @@
     - [x] PostgreSQL Driver
     - [x] Spring Validation
     - [x] Spring Security (for rate limiting)
-    - [ ] Spring Cache (Redis)
     - [x] Lombok
     - [x] SpringDoc OpenAPI (Swagger)
-- [ ] Configure `application.properties` / `application.yml`:
-    - [ ] Database connection settings
-    - [ ] Server port configuration
-    - [ ] CORS settings for Next.js frontend
-    - [ ] Redis cache configuration
-    - [ ] Rate limiting parameters
-- [ ] Set up development and production profiles
-- [ ] Configure logging (Logback)
+    - [x] Spring Data Redis
+    - [x] Testcontainers (for testing)
+    - [x] Logstash encoder (for structured logging)
+- [x] Configure `application.properties` / `application.yml`:
+    - [x] Database connection settings
+    - [x] Server port configuration
+    - [x] CORS settings for Next.js frontend
+    - [x] Redis cache configuration
+    - [x] Rate limiting parameters
+- [x] Set up development and production profiles
+- [x] Configure logging (Logback)
 
 ---
 
