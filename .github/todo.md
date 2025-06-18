@@ -103,24 +103,24 @@
 ---
 
 ## 5. REST API Controllers
-- [ ] Create `FriendCodeController`:
-    - [ ] `POST /api/friend-codes` - Submit new friend code
-        - [ ] Validate request body
-        - [ ] Check rate limit
-        - [ ] Save to database
-        - [ ] Return success/error response
-    - [ ] `GET /api/friend-codes` - Get friend codes feed
-        - [ ] Support pagination parameters (page, size)
-        - [ ] Sort by newest first
-        - [ ] Filter out expired codes
-        - [ ] Return paginated response
-    - [ ] `GET /api/friend-codes/can-submit` - Check if user can submit
-        - [ ] Return boolean and next submission time
-- [ ] Add proper HTTP status codes:
-    - [ ] 201 Created for successful submission
-    - [ ] 429 Too Many Requests for rate limit
-    - [ ] 400 Bad Request for validation errors
-- [ ] Configure CORS for Next.js frontend URL
+- [x] Create `FriendCodeController`:
+    - [x] `POST /api/friend-codes` - Submit new friend code
+        - [x] Validate request body
+        - [x] Check rate limit
+        - [x] Save to database
+        - [x] Return success/error response
+    - [x] `GET /api/friend-codes` - Get friend codes feed
+        - [x] Support pagination parameters (page, size)
+        - [x] Sort by newest first
+        - [x] Filter out expired codes
+        - [x] Return paginated response
+    - [x] `GET /api/friend-codes/can-submit` - Check if user can submit
+        - [x] Return boolean and next submission time
+- [x] Add proper HTTP status codes:
+    - [x] 201 Created for successful submission
+    - [x] 429 Too Many Requests for rate limit
+    - [x] 400 Bad Request for validation errors
+- [x] Configure CORS for Next.js frontend URL
 
 ---
 
@@ -152,11 +152,11 @@
 ---
 
 ## 8. Error Handling & Logging
-- [ ] Create global exception handler (`@ControllerAdvice`):
-    - [ ] Handle validation errors
-    - [ ] Handle rate limit exceeded
-    - [ ] Handle database errors
-    - [ ] Return consistent error format
+- [x] Create global exception handler (`@ControllerAdvice`):
+    - [x] Handle validation errors
+    - [x] Handle rate limit exceeded
+    - [x] Handle database errors
+    - [x] Return consistent error format
 - [ ] Add request/response logging interceptor
 - [ ] Log rate limit violations
 - [ ] Add correlation IDs for request tracking
@@ -165,19 +165,19 @@
 ---
 
 ## 9. Testing
-- [ ] Unit tests for all service methods:
-    - [ ] Test friend code submission logic
-    - [ ] Test rate limiting logic
-    - [ ] Test validation rules
-    - [ ] Test fingerprint generation
-- [ ] Integration tests for REST endpoints:
-    - [ ] Test successful submission
-    - [ ] Test rate limit enforcement
-    - [ ] Test validation errors
-    - [ ] Test pagination
-- [ ] Repository layer tests with @DataJpaTest
-- [ ] Mock Redis for rate limit tests
-- [ ] Add test fixtures and builders
+- [x] Unit tests for all service methods:
+    - [x] Test friend code submission logic
+    - [x] Test rate limiting logic
+    - [x] Test validation rules
+    - [x] Test fingerprint generation
+- [x] Integration tests for REST endpoints:
+    - [x] Test successful submission
+    - [x] Test rate limit enforcement
+    - [x] Test validation errors
+    - [x] Test pagination
+- [x] Repository layer tests with @DataJpaTest
+- [x] Mock Redis for rate limit tests
+- [x] Add test fixtures and builders
 
 ---
 
@@ -209,10 +209,10 @@
 ---
 
 ## 12. Documentation & API Specs
-- [ ] Configure SpringDoc OpenAPI:
-    - [ ] Document all endpoints
-    - [ ] Add example requests/responses
-    - [ ] Document error codes
+- [x] Configure SpringDoc OpenAPI:
+    - [x] Document all endpoints
+    - [x] Add example requests/responses
+    - [x] Document error codes
 - [ ] Create API versioning strategy
 - [ ] Add README with setup instructions
 - [ ] Document rate limiting behavior
