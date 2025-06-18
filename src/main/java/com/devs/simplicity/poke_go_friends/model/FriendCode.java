@@ -1,5 +1,7 @@
 package com.devs.simplicity.poke_go_friends.model;
 
+import com.devs.simplicity.poke_go_friends.validation.CountryCode;
+import com.devs.simplicity.poke_go_friends.validation.NoHtml;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -45,6 +47,7 @@ public class FriendCode {
     private String friendCode;
 
     @Size(max = 50, message = "Trainer name cannot exceed 50 characters")
+    @NoHtml(message = "Trainer name cannot contain HTML or script content")
     @Column(name = "trainer_name", length = 50)
     private String trainerName;
 
@@ -58,6 +61,7 @@ public class FriendCode {
     private Team team;
 
     @Size(max = 50, message = "Country name cannot exceed 50 characters")
+    @CountryCode(message = "Invalid country code")
     @Column(name = "country", length = 50)
     private String country;
 
@@ -66,6 +70,7 @@ public class FriendCode {
     private Purpose purpose;
 
     @Size(max = 100, message = "Message cannot exceed 100 characters")
+    @NoHtml(message = "Message cannot contain HTML or script content")
     @Column(name = "message", length = 100)
     private String message;
 

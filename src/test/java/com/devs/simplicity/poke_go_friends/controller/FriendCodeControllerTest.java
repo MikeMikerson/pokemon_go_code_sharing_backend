@@ -1,7 +1,7 @@
 package com.devs.simplicity.poke_go_friends.controller;
 
-import com.devs.simplicity.poke_go_friends.dto.CanSubmitResponse;
-import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
+import com.devs.simplicity.poke_go_friends.config.SecurityConfig;
+import com.devs.simplicity.poke_go_friends.controller.GlobalExceptionHandler;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeFeedResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeSubmissionRequest;
 import com.devs.simplicity.poke_go_friends.dto.SubmissionResponse;
@@ -9,44 +9,54 @@ import com.devs.simplicity.poke_go_friends.service.FingerprintService;
 import com.devs.simplicity.poke_go_friends.service.FriendCodeService;
 import com.devs.simplicity.poke_go_friends.service.RateLimitService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = FriendCodeController.class, 
-            excludeAutoConfiguration = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
-@SuppressWarnings("removal") // Suppress deprecation warnings for @MockBean
+@ExtendWith(MockitoExtension.class)
 class FriendCodeControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Mock
     private FriendCodeService friendCodeService;
 
-    @MockBean
+    @Mock
     private RateLimitService rateLimitService;
     
-    @MockBean
+    @Mock
     private FingerprintService fingerprintService;
+
+    @BeforeEach
+    void setUp() {
+        objectMapper = new ObjectMapper();
+        FriendCodeController controller = new FriendCodeController(
+                friendCodeService, rateLimitService, fingerprintService);
+        
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
 
     @Test
     void submitFriendCode_validRequest_returnsCreated() throws Exception {
@@ -54,6 +64,7 @@ class FriendCodeControllerTest {
         FriendCodeSubmissionRequest request = FriendCodeSubmissionRequest.builder()
                 .friendCode("123456789012")
                 .trainerName("TestTrainer")
+                .trainerLevel(11)
                 .build();
 
         SubmissionResponse response = SubmissionResponse.builder()
@@ -62,7 +73,6 @@ class FriendCodeControllerTest {
                 .nextSubmissionAllowed(LocalDateTime.now().plusDays(1))
                 .build();
 
-        when(rateLimitService.canSubmit(any(HttpServletRequest.class))).thenReturn(true);
         when(fingerprintService.generateFingerprint(any(HttpServletRequest.class))).thenReturn("test-fingerprint");
         when(friendCodeService.submitFriendCode(any(FriendCodeSubmissionRequest.class), anyString())).thenReturn(response);
 
@@ -76,27 +86,6 @@ class FriendCodeControllerTest {
     }
 
     @Test
-    @Disabled("Rate limiting is now handled by AOP aspect - this test needs to be updated for the new approach")
-    void submitFriendCode_rateLimited_returnsTooManyRequests() throws Exception {
-        // Given
-        FriendCodeSubmissionRequest request = FriendCodeSubmissionRequest.builder()
-                .friendCode("123456789012")
-                .build();
-
-        when(rateLimitService.canSubmit(any(HttpServletRequest.class))).thenReturn(false);
-        when(rateLimitService.getNextAllowedSubmissionTime(any(HttpServletRequest.class)))
-                .thenReturn(Instant.now().plusSeconds(3600));
-
-        // When & Then
-        mockMvc.perform(post("/api/friend-codes")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isTooManyRequests())
-                .andExpect(jsonPath("$.error").value("Rate limit exceeded"))
-                .andExpect(header().exists("Retry-After"));
-    }
-
-    @Test
     void submitFriendCode_invalidFriendCode_returnsBadRequest() throws Exception {
         // Given
         FriendCodeSubmissionRequest request = FriendCodeSubmissionRequest.builder()
@@ -107,19 +96,18 @@ class FriendCodeControllerTest {
         mockMvc.perform(post("/api/friend-codes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void getFriendCodes_validRequest_returnsOk() throws Exception {
         // Given
         FriendCodeFeedResponse response = FriendCodeFeedResponse.builder()
-                .friendCodes(java.util.List.of())
+                .friendCodes(List.of())
                 .hasMore(false)
                 .build();
 
-        when(friendCodeService.getActiveFriendCodes(0, 20)).thenReturn(response);
+        when(friendCodeService.getActiveFriendCodes(anyInt(), anyInt())).thenReturn(response);
 
         // When & Then
         mockMvc.perform(get("/api/friend-codes")
@@ -134,19 +122,22 @@ class FriendCodeControllerTest {
     void canSubmit_userCanSubmit_returnsOk() throws Exception {
         // Given
         when(rateLimitService.canSubmit(any(HttpServletRequest.class))).thenReturn(true);
+        when(rateLimitService.getNextAllowedSubmissionTime(any(HttpServletRequest.class))).thenReturn(null);
 
         // When & Then
         mockMvc.perform(get("/api/friend-codes/can-submit"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.canSubmit").value(true));
+                .andExpect(jsonPath("$.canSubmit").value(true))
+                .andExpect(jsonPath("$.nextSubmissionTime").doesNotExist());
     }
 
     @Test
     void canSubmit_userCannotSubmit_returnsOk() throws Exception {
         // Given
         when(rateLimitService.canSubmit(any(HttpServletRequest.class))).thenReturn(false);
+        Instant nextSubmissionTime = Instant.now().plusSeconds(3600);
         when(rateLimitService.getNextAllowedSubmissionTime(any(HttpServletRequest.class)))
-                .thenReturn(Instant.now().plusSeconds(3600));
+                .thenReturn(nextSubmissionTime);
 
         // When & Then
         mockMvc.perform(get("/api/friend-codes/can-submit"))

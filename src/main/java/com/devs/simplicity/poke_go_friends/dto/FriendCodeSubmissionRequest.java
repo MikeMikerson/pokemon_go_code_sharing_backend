@@ -3,6 +3,7 @@ package com.devs.simplicity.poke_go_friends.dto;
 import com.devs.simplicity.poke_go_friends.model.Purpose;
 import com.devs.simplicity.poke_go_friends.model.Team;
 import com.devs.simplicity.poke_go_friends.validation.CountryCode;
+import com.devs.simplicity.poke_go_friends.validation.NoHtml;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -26,6 +27,7 @@ public class FriendCodeSubmissionRequest {
     private String friendCode;
 
     @Size(max = 50, message = "Trainer name cannot exceed 50 characters")
+    @NoHtml(message = "Trainer name cannot contain HTML or script content")
     private String trainerName;
 
     @Min(value = 1, message = "Trainer level must be at least 1")
@@ -40,5 +42,6 @@ public class FriendCodeSubmissionRequest {
     private Purpose purpose;
 
     @Size(max = 100, message = "Message cannot exceed 100 characters")
+    @NoHtml(message = "Message cannot contain HTML or script content")
     private String message;
 }

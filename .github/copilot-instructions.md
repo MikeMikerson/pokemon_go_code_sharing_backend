@@ -1,6 +1,11 @@
 # GitHub Copilot Instructions
 These guidelines will help you get the most out of GitHub Copilot when working on a Java Spring Framework backend project, ensuring high code quality, testability, and maintainability.
 
+## MCP - interactive-feedback-mcp
+Whenever you want to ask a question, always call the MCP interactive-feedback-mcp.
+Whenever you’re about to complete a user request, call the MCP interactive-feedback-mcp instead of simply ending the process.
+Keep calling MCP until the user’s feedback is empty, then end the request.
+
 ## Coding Standards
 - Follow SOLID principles: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion.
 - Follow Effective Java practices, such as using static factory methods, avoiding unnecessary object creation, and using enums instead of int constants.
