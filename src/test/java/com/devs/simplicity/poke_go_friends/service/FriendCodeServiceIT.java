@@ -1,5 +1,7 @@
 package com.devs.simplicity.poke_go_friends.service;
 
+import com.devs.simplicity.poke_go_friends.config.MockCacheConfig;
+import com.devs.simplicity.poke_go_friends.config.MockRedisConfig;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeFeedResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeSubmissionRequest;
 import com.devs.simplicity.poke_go_friends.dto.SubmissionResponse;
@@ -20,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Integration tests for FriendCodeService.
  * Tests the service in a real Spring context with actual repositories.
  */
-@SpringBootTest
+@SpringBootTest(classes = {MockCacheConfig.class})
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("FriendCode Service Integration Tests")

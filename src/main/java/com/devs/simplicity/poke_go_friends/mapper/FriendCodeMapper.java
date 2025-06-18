@@ -3,6 +3,7 @@ package com.devs.simplicity.poke_go_friends.mapper;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeSubmissionRequest;
 import com.devs.simplicity.poke_go_friends.model.FriendCode;
+import com.devs.simplicity.poke_go_friends.dto.projection.FriendCodeFeedProjection;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -99,5 +100,23 @@ public class FriendCodeMapper {
         entity.setExpiresAt(now.plusHours(48));
         
         return entity;
+    }
+
+    /**
+     * Converts a FriendCodeFeedProjection to FriendCodeResponse.
+     */
+    public FriendCodeResponse fromFeedProjection(FriendCodeFeedProjection projection) {
+        return FriendCodeResponse.builder()
+                .id(projection.getId())
+                .friendCode(projection.getFriendCode())
+                .trainerName(projection.getTrainerName())
+                .trainerLevel(projection.getTrainerLevel())
+                .team(projection.getTeam())
+                .country(projection.getCountry())
+                .purpose(projection.getPurpose())
+                .message(projection.getMessage())
+                .submittedAt(projection.getSubmittedAt())
+                .expiresAt(projection.getExpiresAt())
+                .build();
     }
 }

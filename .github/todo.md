@@ -193,15 +193,15 @@
 ---
 
 ## 10. Performance & Optimization
-- [ ] Add database connection pooling (HikariCP)
-- [ ] Configure JPA query optimization:
-    - [ ] Use projections for read-only queries
+- [x] Add database connection pooling (HikariCP)
+- [x] Configure JPA query optimization:
+    - [x] Use projections for read-only queries
     - [ ] Add appropriate fetch strategies
-- [ ] Implement response caching:
-    - [ ] Cache friend codes feed (1-5 minutes)
-    - [ ] Use ETags for conditional requests
-- [ ] Add pagination limits (max 100 per page)
-- [ ] Monitor slow queries
+- [x] Implement response caching:
+    - [x] Cache friend codes feed (1-5 minutes)
+    - [x] Use ETags for conditional requests
+- [x] Add pagination limits (max 100 per page)
+- [x] Monitor slow queries
 
 ---
 

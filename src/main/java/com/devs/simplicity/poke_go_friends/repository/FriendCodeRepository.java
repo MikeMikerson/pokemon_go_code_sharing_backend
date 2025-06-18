@@ -129,4 +129,14 @@ public interface FriendCodeRepository extends JpaRepository<FriendCode, UUID> {
                 userFingerprint, PageRequest.of(0, 1));
         return results.isEmpty() ? null : results.get(0);
     }
+
+    /**
+     * Retrieves a page of active (non-expired) friend codes as a projection for feed optimization.
+     *
+     * @param currentTime the current timestamp to compare against expiration
+     * @param pageable    pagination information
+     * @return page of FriendCodeFeedProjection
+     */
+    @Query("SELECT fc.id as id, fc.friendCode as friendCode, fc.trainerName as trainerName, fc.trainerLevel as trainerLevel, fc.team as team, fc.country as country, fc.purpose as purpose, fc.message as message, fc.submittedAt as submittedAt, fc.expiresAt as expiresAt FROM FriendCode fc WHERE fc.expiresAt > :currentTime ORDER BY fc.submittedAt DESC")
+    Page<com.devs.simplicity.poke_go_friends.dto.projection.FriendCodeFeedProjection> findActiveFriendCodesProjected(@Param("currentTime") LocalDateTime currentTime, Pageable pageable);
 }

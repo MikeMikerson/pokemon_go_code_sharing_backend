@@ -9,6 +9,7 @@ import com.devs.simplicity.poke_go_friends.model.FriendCode;
 import com.devs.simplicity.poke_go_friends.model.Purpose;
 import com.devs.simplicity.poke_go_friends.model.Team;
 import com.devs.simplicity.poke_go_friends.repository.FriendCodeRepository;
+import com.devs.simplicity.poke_go_friends.dto.projection.FriendCodeFeedProjection;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -174,13 +175,11 @@ class FriendCodeServiceTest {
         // Given
         int page = 0;
         int size = 10;
-        List<FriendCode> friendCodes = List.of(validEntity);
-        Page<FriendCode> friendCodesPage = new PageImpl<>(friendCodes, PageRequest.of(page, size), 1);
-        List<FriendCodeResponse> responseList = List.of(validResponse);
-
-        when(friendCodeRepository.findActiveFriendCodes(any(LocalDateTime.class), any(Pageable.class)))
-                .thenReturn(friendCodesPage);
-        when(friendCodeMapper.toResponseList(friendCodes)).thenReturn(responseList);
+        FriendCodeFeedProjection projection = createProjectionFromEntity(validEntity);
+        Page<FriendCodeFeedProjection> projectionPage = new PageImpl<>(List.of(projection), PageRequest.of(page, size), 1);
+        when(friendCodeRepository.findActiveFriendCodesProjected(any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(projectionPage);
+        when(friendCodeMapper.fromFeedProjection(projection)).thenReturn(validResponse);
 
         // When
         FriendCodeFeedResponse response = friendCodeService.getActiveFriendCodes(page, size);
@@ -194,8 +193,8 @@ class FriendCodeServiceTest {
         assertThat(response.getCurrentPage()).isEqualTo(page);
         assertThat(response.getPageSize()).isEqualTo(size);
 
-        verify(friendCodeRepository).findActiveFriendCodes(any(LocalDateTime.class), any(Pageable.class));
-        verify(friendCodeMapper).toResponseList(friendCodes);
+        verify(friendCodeRepository).findActiveFriendCodesProjected(any(LocalDateTime.class), any(Pageable.class));
+        verify(friendCodeMapper).fromFeedProjection(projection);
     }
 
     @Test
@@ -204,13 +203,11 @@ class FriendCodeServiceTest {
         // Given
         int page = 0;
         int size = 10;
-        List<FriendCode> friendCodes = List.of(validEntity);
-        Page<FriendCode> friendCodesPage = new PageImpl<>(friendCodes, PageRequest.of(page, size), 25); // 25 total elements
-        List<FriendCodeResponse> responseList = List.of(validResponse);
-
-        when(friendCodeRepository.findActiveFriendCodes(any(LocalDateTime.class), any(Pageable.class)))
-                .thenReturn(friendCodesPage);
-        when(friendCodeMapper.toResponseList(friendCodes)).thenReturn(responseList);
+        FriendCodeFeedProjection projection = createProjectionFromEntity(validEntity);
+        Page<FriendCodeFeedProjection> projectionPage = new PageImpl<>(List.of(projection), PageRequest.of(page, size), 25);
+        when(friendCodeRepository.findActiveFriendCodesProjected(any(LocalDateTime.class), any(Pageable.class)))
+                .thenReturn(projectionPage);
+        when(friendCodeMapper.fromFeedProjection(projection)).thenReturn(validResponse);
 
         // When
         FriendCodeFeedResponse response = friendCodeService.getActiveFriendCodes(page, size);
@@ -393,6 +390,21 @@ class FriendCodeServiceTest {
 
         // Then
         assertThat(hasExpired).isFalse();
+    }
+
+    private FriendCodeFeedProjection createProjectionFromEntity(FriendCode entity) {
+        return new FriendCodeFeedProjection() {
+            public java.util.UUID getId() { return entity.getId(); }
+            public String getFriendCode() { return entity.getFriendCode(); }
+            public String getTrainerName() { return entity.getTrainerName(); }
+            public Integer getTrainerLevel() { return entity.getTrainerLevel(); }
+            public com.devs.simplicity.poke_go_friends.model.Team getTeam() { return entity.getTeam(); }
+            public String getCountry() { return entity.getCountry(); }
+            public com.devs.simplicity.poke_go_friends.model.Purpose getPurpose() { return entity.getPurpose(); }
+            public String getMessage() { return entity.getMessage(); }
+            public java.time.LocalDateTime getSubmittedAt() { return entity.getSubmittedAt(); }
+            public java.time.LocalDateTime getExpiresAt() { return entity.getExpiresAt(); }
+        };
     }
 
     @SuppressWarnings("unchecked")

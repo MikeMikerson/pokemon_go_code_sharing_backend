@@ -11,6 +11,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -90,28 +91,24 @@ public class FriendCodeService {
      * @param size the page size
      * @return paginated response with active friend codes
      */
+    @Cacheable(value = "friendCodesFeed", key = "#page + '-' + #size")
     @Transactional(readOnly = true)
     public FriendCodeFeedResponse getActiveFriendCodes(int page, int size) {
-        log.debug("Retrieving active friend codes - page: {}, size: {}", page, size);
-        
+        log.debug("Retrieving active friend codes (projection) - page: {}, size: {}", page, size);
         LocalDateTime currentTime = LocalDateTime.now();
         Pageable pageable = PageRequest.of(page, size);
-        
-        // Fetch active friend codes from repository
-        Page<FriendCode> friendCodesPage = friendCodeRepository.findActiveFriendCodes(currentTime, pageable);
-        
-        // Convert to response DTOs
-        List<FriendCodeResponse> friendCodeResponses = friendCodeMapper.toResponseList(friendCodesPage.getContent());
-        
-        log.debug("Retrieved {} active friend codes for page {}", friendCodeResponses.size(), page);
-        
+        Page<com.devs.simplicity.poke_go_friends.dto.projection.FriendCodeFeedProjection> projectionPage = friendCodeRepository.findActiveFriendCodesProjected(currentTime, pageable);
+        List<FriendCodeResponse> friendCodeResponses = projectionPage.getContent().stream()
+                .map(friendCodeMapper::fromFeedProjection)
+                .toList();
+        log.debug("Retrieved {} active friend codes for page {} (projection)", friendCodeResponses.size(), page);
         return FriendCodeFeedResponse.builder()
                 .friendCodes(friendCodeResponses)
-                .hasMore(friendCodesPage.hasNext())
-                .totalElements((int) friendCodesPage.getTotalElements())
+                .hasMore(projectionPage.hasNext())
+                .totalElements((int) projectionPage.getTotalElements())
                 .currentPage(page)
                 .pageSize(size)
-                .nextCursor(friendCodesPage.hasNext() ? String.valueOf(page + 1) : null)
+                .nextCursor(projectionPage.hasNext() ? String.valueOf(page + 1) : null)
                 .build();
     }
 
