@@ -1,5 +1,6 @@
 package com.devs.simplicity.poke_go_friends.controller;
 
+import com.devs.simplicity.poke_go_friends.annotation.RateLimited;
 import com.devs.simplicity.poke_go_friends.dto.CanSubmitResponse;
 import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeFeedResponse;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 
 /**
  * REST controller for managing Pokémon Go friend codes.
@@ -56,6 +58,13 @@ public class FriendCodeController {
      * Submits a new friend code after validation and rate limit checks.
      */
     @PostMapping
+    @RateLimited(
+        windowSize = 24,
+        timeUnit = TimeUnit.HOURS,
+        maxAttempts = 1,
+        keyPrefix = "friend_code_submission",
+        errorMessage = "You can only submit one friend code per 24 hours"
+    )
     @Operation(summary = "Submit a new friend code", 
                description = "Submits a new Pokémon Go friend code with optional trainer information")
     @ApiResponses(value = {
@@ -73,34 +82,13 @@ public class FriendCodeController {
         log.info("Friend code submission request received");
         
         try {
-            // Check rate limit
-            if (!rateLimitService.canSubmit(httpRequest)) {
-                log.warn("Rate limit exceeded for submission attempt");
-                
-                Instant nextAllowed = rateLimitService.getNextAllowedSubmissionTime(httpRequest);
-                long retryAfterSeconds = ChronoUnit.SECONDS.between(Instant.now(), nextAllowed);
-                
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                        .error("Rate limit exceeded")
-                        .message("You can submit another friend code at " + nextAllowed)
-                        .timestamp(LocalDateTime.now())
-                        .build();
-                
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .header("Retry-After", String.valueOf(Math.max(0, retryAfterSeconds)))
-                        .body(errorResponse);
-            }
-            
             // Generate user fingerprint for the service
             String userFingerprint = fingerprintService.generateFingerprint(httpRequest);
             
-            // Submit the friend code
+            // Submit the friend code (rate limiting is handled by @RateLimited aspect)
             SubmissionResponse response = friendCodeService.submitFriendCode(request, userFingerprint);
             
             if (response.isSuccess()) {
-                // Record the submission for rate limiting
-                rateLimitService.recordSubmission(httpRequest);
-                
                 log.info("Friend code submitted successfully");
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
             } else {
