@@ -5,6 +5,7 @@ import com.devs.simplicity.poke_go_friends.controller.GlobalExceptionHandler;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeFeedResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeSubmissionRequest;
 import com.devs.simplicity.poke_go_friends.dto.SubmissionResponse;
+import com.devs.simplicity.poke_go_friends.metrics.ApplicationMetricsService;
 import com.devs.simplicity.poke_go_friends.service.FingerprintService;
 import com.devs.simplicity.poke_go_friends.service.FriendCodeService;
 import com.devs.simplicity.poke_go_friends.service.RateLimitService;
@@ -46,12 +47,15 @@ class FriendCodeControllerTest {
     
     @Mock
     private FingerprintService fingerprintService;
+    
+    @Mock
+    private ApplicationMetricsService metricsService;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
         FriendCodeController controller = new FriendCodeController(
-                friendCodeService, rateLimitService, fingerprintService);
+                friendCodeService, rateLimitService, fingerprintService, metricsService);
         
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())

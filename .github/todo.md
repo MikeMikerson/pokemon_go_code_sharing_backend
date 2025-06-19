@@ -206,16 +206,16 @@
 ---
 
 ## 11. Monitoring & Health Checks
-- [ ] Add Spring Boot Actuator:
-    - [ ] Health endpoint
-    - [ ] Metrics endpoint
-    - [ ] Custom health indicator for Redis
-- [ ] Add custom metrics:
-    - [ ] Submission count
-    - [ ] Rate limit hit count
-    - [ ] Active friend codes count
-- [ ] Configure structured logging (JSON format)
-- [ ] Add database migration status check
+- [x] Add Spring Boot Actuator:
+    - [x] Health endpoint
+    - [x] Metrics endpoint
+    - [x] Custom health indicator for Redis
+- [x] Add custom metrics:
+    - [x] Submission count
+    - [x] Rate limit hit count
+    - [x] Active friend codes count
+- [x] Configure structured logging (JSON format)
+- [x] Add database migration status check
 
 ---
 

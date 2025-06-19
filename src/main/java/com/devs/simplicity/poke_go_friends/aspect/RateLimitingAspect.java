@@ -3,6 +3,7 @@ package com.devs.simplicity.poke_go_friends.aspect;
 import com.devs.simplicity.poke_go_friends.annotation.RateLimited;
 import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
 import com.devs.simplicity.poke_go_friends.exception.RateLimitExceededException;
+import com.devs.simplicity.poke_go_friends.metrics.ApplicationMetricsService;
 import com.devs.simplicity.poke_go_friends.service.FingerprintService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class RateLimitingAspect {
     
     private final RedisTemplate<String, String> redisTemplate;
     private final FingerprintService fingerprintService;
+    private final ApplicationMetricsService metricsService;
     
     /**
      * Around advice for rate limited methods.
@@ -192,6 +194,9 @@ public class RateLimitingAspect {
      */
     private Object handleRateLimitExceeded(String key, RateLimited rateLimited) {
         log.warn("Rate limit exceeded for key: {}", key);
+        
+        // Track rate limit hit
+        metricsService.incrementRateLimitHits();
         
         long retryAfterSeconds = calculateRetryAfter(key, rateLimited);
         Instant nextAllowedTime = Instant.now().plusSeconds(retryAfterSeconds);

@@ -6,6 +6,7 @@ import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeFeedResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeSubmissionRequest;
 import com.devs.simplicity.poke_go_friends.dto.SubmissionResponse;
+import com.devs.simplicity.poke_go_friends.metrics.ApplicationMetricsService;
 import com.devs.simplicity.poke_go_friends.service.FingerprintService;
 import com.devs.simplicity.poke_go_friends.service.FriendCodeService;
 import com.devs.simplicity.poke_go_friends.service.RateLimitService;
@@ -56,6 +57,7 @@ public class FriendCodeController {
     private final FriendCodeService friendCodeService;
     private final RateLimitService rateLimitService;
     private final FingerprintService fingerprintService;
+    private final ApplicationMetricsService metricsService;
 
     /**
      * Submits a new friend code after validation and rate limit checks.
@@ -85,6 +87,8 @@ public class FriendCodeController {
             SubmissionResponse response = friendCodeService.submitFriendCode(request, userFingerprint);
 
             if (response.isSuccess()) {
+                // Track successful submission
+                metricsService.incrementSubmissions();
                 log.info("Friend code submitted successfully");
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
             } else {

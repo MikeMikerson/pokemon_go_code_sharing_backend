@@ -1,6 +1,7 @@
 package com.devs.simplicity.poke_go_friends.aspect;
 
 import com.devs.simplicity.poke_go_friends.annotation.RateLimited;
+import com.devs.simplicity.poke_go_friends.metrics.ApplicationMetricsService;
 import com.devs.simplicity.poke_go_friends.service.FingerprintService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -44,13 +45,16 @@ class RateLimitingAspectTest {
     @Mock
     private ProceedingJoinPoint joinPoint;
     
+    @Mock
+    private ApplicationMetricsService metricsService;
+    
     private RateLimitingAspect rateLimitingAspect;
     private MockHttpServletRequest request;
     
     @BeforeEach
     void setUp() {
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        rateLimitingAspect = new RateLimitingAspect(redisTemplate, fingerprintService);
+        rateLimitingAspect = new RateLimitingAspect(redisTemplate, fingerprintService, metricsService);
         
         request = new MockHttpServletRequest();
         request.setRemoteAddr("192.168.1.100");
