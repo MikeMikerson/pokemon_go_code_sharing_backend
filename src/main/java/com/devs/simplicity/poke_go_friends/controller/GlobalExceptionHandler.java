@@ -1,0 +1,211 @@
+package com.devs.simplicity.poke_go_friends.controller;
+
+import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
+import com.devs.simplicity.poke_go_friends.exception.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Global exception handler for all REST controllers.
+ * Provides consistent error responses across the application.
+ */
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler {
+
+    /**
+     * Handle validation errors from @Valid annotations.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationErrors(
+            MethodArgumentNotValidException ex, WebRequest request) {
+        
+        log.warn("Validation error: {}", ex.getMessage());
+        
+        List<String> errors = new ArrayList<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errors.add(error.getField() + ": " + error.getDefaultMessage());
+        }
+        
+        String message = "Validation failed";
+        String details = String.join(", ", errors);
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Validation Error",
+            message,
+            details,
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle custom validation exceptions.
+     */
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(
+            ValidationException ex, WebRequest request) {
+        
+        log.warn("Validation exception: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Validation Error",
+            ex.getMessage(),
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle friend code not found exceptions.
+     */
+    @ExceptionHandler(FriendCodeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleFriendCodeNotFound(
+            FriendCodeNotFoundException ex, WebRequest request) {
+        
+        log.warn("Friend code not found: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            "Resource Not Found",
+            ex.getMessage(),
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
+     * Handle duplicate friend code exceptions.
+     */
+    @ExceptionHandler(DuplicateFriendCodeException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateFriendCode(
+            DuplicateFriendCodeException ex, WebRequest request) {
+        
+        log.warn("Duplicate friend code: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.CONFLICT.value(),
+            "Duplicate Resource",
+            ex.getMessage(),
+            "The friend code has already been submitted",
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    /**
+     * Handle rate limiting exceptions.
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(
+            RateLimitExceededException ex, WebRequest request) {
+        
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.TOO_MANY_REQUESTS.value(),
+            "Rate Limit Exceeded",
+            "Too many requests. Please try again later.",
+            ex.getMessage(),
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponse);
+    }
+
+    /**
+     * Handle method argument type mismatch (e.g., invalid path variables).
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, WebRequest request) {
+        
+        log.warn("Type mismatch error: {}", ex.getMessage());
+        
+        String message = String.format("Invalid value '%s' for parameter '%s'", 
+                                      ex.getValue(), ex.getName());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Invalid Parameter",
+            message,
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle malformed JSON requests.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMalformedJson(
+            HttpMessageNotReadableException ex, WebRequest request) {
+        
+        log.warn("Malformed JSON request: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Malformed Request",
+            "Invalid JSON format in request body",
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle general friend code exceptions.
+     */
+    @ExceptionHandler(FriendCodeException.class)
+    public ResponseEntity<ErrorResponse> handleFriendCodeException(
+            FriendCodeException ex, WebRequest request) {
+        
+        log.error("Friend code exception: {}", ex.getMessage(), ex);
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Friend Code Error",
+            ex.getMessage(),
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    /**
+     * Handle all other unexpected exceptions.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(
+            Exception ex, WebRequest request) {
+        
+        log.error("Unexpected error occurred", ex);
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "Internal Server Error",
+            "An unexpected error occurred. Please try again later.",
+            request.getDescription(false).replace("uri=", "")
+        );
+        
+        return ResponseEntity.internalServerError().body(errorResponse);
+    }
+}

@@ -19,6 +19,8 @@ Keep calling MCP until the user’s feedback is empty, then end the request.
 
 ## Testing Guidelines
 ### Test-Driven Development (TDD)
+- Use ./gradlew clean test to run tests.
+- Do not use VSC's "Run Test" feature; always run tests from the command line.
 - Always write a failing test first, then implement production code.
 - Ensure tests remain fast, focused, and deterministic.
 - Strictly follow the red-green-refactor cycle.
