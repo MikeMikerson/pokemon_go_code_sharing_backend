@@ -49,17 +49,17 @@ This backend provides API services for a Pokemon Go friend code sharing applicat
   - [x] Content moderation (inappropriate names/descriptions)
 
 ### 4. Controller Layer
-- [ ] **FriendCodeController** REST API endpoints:
-  - [ ] `POST /api/friend-codes` - Submit new friend code
-  - [ ] `GET /api/friend-codes` - Get paginated list with filters
-  - [ ] `GET /api/friend-codes/{id}` - Get specific friend code
-  - [ ] `PUT /api/friend-codes/{id}` - Update friend code (if owned)
-  - [ ] `DELETE /api/friend-codes/{id}` - Deactivate friend code
-  - [ ] `GET /api/friend-codes/search` - Search with query parameters
+- [x] **FriendCodeController** REST API endpoints:
+  - [x] `POST /api/friend-codes` - Submit new friend code
+  - [x] `GET /api/friend-codes` - Get paginated list with filters
+  - [x] `GET /api/friend-codes/{id}` - Get specific friend code
+  - [x] `PUT /api/friend-codes/{id}` - Update friend code (if owned)
+  - [x] `DELETE /api/friend-codes/{id}` - Deactivate friend code
+  - [x] `GET /api/friend-codes/search` - Search with query parameters
 
-- [ ] **HealthController** 
-  - [ ] Basic health check endpoint
-  - [ ] Database connectivity check
+- [x] **HealthController** 
+  - [x] Basic health check endpoint
+  - [x] Database connectivity check
 
 ### 5. DTOs (Data Transfer Objects)
 - [ ] **FriendCodeSubmissionRequest**
