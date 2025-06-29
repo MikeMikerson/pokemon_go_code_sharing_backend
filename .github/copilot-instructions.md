@@ -1,6 +1,8 @@
 # GitHub Copilot Instructions
 These guidelines will help you get the most out of GitHub Copilot when working on a Java Spring Framework backend project, ensuring high code quality, testability, and maintainability.
 
+Please remember, if you need any up-to-date information or specific details, always refer to the latest official documentation or resources.
+
 ## MCP - interactive-feedback-mcp
 Whenever you want to ask a question, always call the MCP interactive-feedback-mcp.
 Whenever you’re about to complete a user request, call the MCP interactive-feedback-mcp instead of simply ending the process.

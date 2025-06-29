@@ -62,22 +62,27 @@ This backend provides API services for a Pokemon Go friend code sharing applicat
   - [x] Database connectivity check
 
 ### 5. DTOs (Data Transfer Objects)
-- [ ] **FriendCodeSubmissionRequest**
-  - [ ] Validation annotations
-  - [ ] Required fields: friendCode, trainerName
-  - [ ] Optional fields: playerLevel, location, description
+- [x] **FriendCodeSubmissionRequest**
+  - [x] Validation annotations
+  - [x] Required fields: friendCode, trainerName
+  - [x] Optional fields: playerLevel, location, description
 
-- [ ] **FriendCodeResponse**
-  - [ ] Public response format
-  - [ ] Include all safe fields to display
+- [x] **FriendCodeResponse**
+  - [x] Public response format
+  - [x] Include all safe fields to display
 
-- [ ] **FriendCodeFeedResponse** 
-  - [ ] Paginated response wrapper
-  - [ ] Include metadata (total count, page info)
+- [x] **FriendCodeFeedResponse** 
+  - [x] Paginated response wrapper
+  - [x] Include metadata (total count, page info)
 
-- [ ] **ErrorResponse**
-  - [ ] Standardized error format
-  - [ ] Include error codes and messages
+- [x] **ErrorResponse**
+  - [x] Standardized error format
+  - [x] Include error codes and messages
+
+- [x] **FriendCodeUpdateRequest**
+  - [x] Optional field updates
+  - [x] Validation annotations
+  - [x] Update detection logic
 
 ### 6. Database Configuration
 - [ ] **Database Setup**
