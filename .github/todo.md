@@ -1,176 +1,249 @@
-# TODO: Backend Compatibility with Frontend Repository
+# Pokemon Go Code Sharing Backend - TODO
 
-This TODO list ensures compatibility between the `pokemon_go_code_sharing_backend` (Java Spring) and the `MikeMikerson/pokemon_go_code_sharing` frontend (TypeScript/Next.js).
+## Project Overview
+This backend provides API services for a Pokemon Go friend code sharing application. The frontend allows users to submit, view, and share friend codes with other Pokemon Go players.
 
-## Frontend Analysis Summary
+## Core Features to Implement
 
-**Frontend Repository:** `MikeMikerson/pokemon_go_code_sharing` (Next.js + TypeScript)
-- **Key Components:** Friend code submission forms, feed display, validation utilities
-- **Data Structure:** Comprehensive friend code model with teams, goals, validation rules
-- **Features:** Real-time updates, theme switching, responsive design
+### 1. Data Models & Entities
+- [ ] **FriendCode Entity**
+  - [ ] Create `FriendCode` JPA entity with fields:
+    - `id` (Long, Primary Key)
+    - `friendCode` (String, 12-digit code with validation)
+    - `trainerName` (String, Pokemon Go trainer name)
+    - `playerLevel` (Integer, optional)
+    - `location` (String, optional - city/country)
+    - `description` (String, optional - what they're looking for)
+    - `isActive` (Boolean, default true)
+    - `createdAt` (LocalDateTime)
+    - `updatedAt` (LocalDateTime)
+    - `expiresAt` (LocalDateTime, optional)
 
-## API Compatibility Requirements
+- [ ] **User Entity** (if authentication is needed)
+  - [ ] Create `User` JPA entity for authentication
+  - [ ] Link FriendCode submissions to users
+  - [ ] Include basic profile information
 
-### ✅ Already Implemented
+### 2. Repository Layer
+- [ ] **FriendCodeRepository**
+  - [ ] Create JPA repository interface
+  - [ ] Custom queries for:
+    - Finding active friend codes
+    - Searching by location
+    - Finding recent submissions
+    - Pagination support
 
-- [x] **FriendCode Entity Model** - Matches frontend expectations
-  - UUID id, 12-digit friend code validation
-  - Trainer name, level (1-50), team (MYSTIC/VALOR/INSTINCT)
-  - Country validation, purpose (GIFTS/RAIDS/BOTH)
-  - Message field, timestamps (submitted/expires)
-  
-- [x] **Core REST Endpoints**
-  - `POST /api/friend-codes` - Submit friend code
-  - `GET /api/friend-codes` - Paginated feed (with ETag caching)
-  - `GET /api/friend-codes/can-submit` - Rate limit check
+### 3. Service Layer  
+- [ ] **FriendCodeService**
+  - [ ] Create friend code
+  - [ ] Validate friend code format (12 digits)
+  - [ ] Get paginated list of friend codes
+  - [ ] Filter by location, level range
+  - [ ] Search functionality
+  - [ ] Mark friend code as inactive/expired
+  - [ ] Duplicate detection logic
 
-- [x] **Data Validation**
-  - 12-digit friend code pattern validation
-  - Trainer level range (1-50), name length (≤50)
-  - Country code validation, HTML content filtering
-  - Message length validation (≤100 characters)
+- [ ] **ValidationService**
+  - [ ] Friend code format validation
+  - [ ] Rate limiting per IP/user
+  - [ ] Content moderation (inappropriate names/descriptions)
 
-- [x] **Rate Limiting & Security**
-  - User fingerprinting for rate limiting
-  - 24-hour submission cooldown
-  - 48-hour friend code expiration
-  - CORS configuration, security headers
+### 4. Controller Layer
+- [ ] **FriendCodeController** REST API endpoints:
+  - [ ] `POST /api/friend-codes` - Submit new friend code
+  - [ ] `GET /api/friend-codes` - Get paginated list with filters
+  - [ ] `GET /api/friend-codes/{id}` - Get specific friend code
+  - [ ] `PUT /api/friend-codes/{id}` - Update friend code (if owned)
+  - [ ] `DELETE /api/friend-codes/{id}` - Deactivate friend code
+  - [ ] `GET /api/friend-codes/search` - Search with query parameters
 
-## Frontend-Backend Compatibility Gaps
+- [ ] **HealthController** 
+  - [ ] Basic health check endpoint
+  - [ ] Database connectivity check
 
-### 🔧 API Path Mismatch - HIGH PRIORITY
+### 5. DTOs (Data Transfer Objects)
+- [ ] **FriendCodeSubmissionRequest**
+  - [ ] Validation annotations
+  - [ ] Required fields: friendCode, trainerName
+  - [ ] Optional fields: playerLevel, location, description
 
-- [ ] **Update API Base Path from `/api/friend-codes` to `/api/v1/friend-codes`**
-  - Frontend expects: `/api/v1/friend-codes`
-  - Backend provides: `/api/friend-codes`
-  - **Files to modify:**
-    - `src/main/java/com/devs/simplicity/poke_go_friends/controller/FriendCodeController.java`
-    - Update `@RequestMapping("/api/friend-codes")` to `@RequestMapping("/api/v1/friend-codes")`
-    - Update all tests referencing the old path
+- [ ] **FriendCodeResponse**
+  - [ ] Public response format
+  - [ ] Include all safe fields to display
 
-### 📱 Frontend-Specific Features - MEDIUM PRIORITY
+- [ ] **FriendCodeFeedResponse** 
+  - [ ] Paginated response wrapper
+  - [ ] Include metadata (total count, page info)
 
-- [ ] **Add Theme Support Endpoints**
-  - Frontend has dark/light theme switching
-  - Consider adding user preference storage endpoints
-  - `GET /api/v1/user/preferences` 
-  - `PUT /api/v1/user/preferences`
+- [ ] **ErrorResponse**
+  - [ ] Standardized error format
+  - [ ] Include error codes and messages
 
-- [ ] **Enhanced Friend Code Response**
-  - [ ] Add `isOwnSubmission` flag to FriendCodeResponse
-  - [ ] Add `timeRemaining` calculated field for expiration
-  - [ ] Consider adding `reportCount` for moderation
+### 6. Database Configuration
+- [ ] **Database Setup**
+  - [ ] Configure PostgreSQL connection
+  - [ ] Set up connection pooling
+  - [ ] Configure for different environments (dev, prod)
 
-### 🔄 Real-time Features - LOW PRIORITY
+- [ ] **Flyway Migrations**
+  - [ ] Create initial schema migration
+  - [ ] Add indexes for common queries
+  - [ ] Set up versioning strategy
 
-- [ ] **WebSocket Support for Live Updates**
-  - Frontend context suggests real-time friend code updates
-  - Add WebSocket endpoint: `/ws/friend-codes`
-  - Broadcast new submissions to connected clients
-  - **Dependencies to add:**
-    - Spring WebSocket
-    - STOMP messaging
+### 7. Security & Validation
+- [ ] **Input Validation**
+  - [ ] Friend code format validation (exactly 12 digits)
+  - [ ] Trainer name length and character validation
+  - [ ] Sanitize all text inputs
+  - [ ] Rate limiting configuration
 
-### 📊 Analytics & Metrics - LOW PRIORITY
+- [ ] **CORS Configuration**
+  - [ ] Configure CORS for frontend domain
+  - [ ] Set appropriate headers
+  - [ ] Handle preflight requests
 
-- [ ] **Enhanced Analytics Endpoints**
-  - `GET /api/v1/stats/active-codes` - Current active count
-  - `GET /api/v1/stats/submission-trends` - Daily/weekly trends
-  - `GET /api/v1/stats/team-distribution` - Team popularity
+- [ ] **Security Headers**
+  - [ ] Configure security headers
+  - [ ] CSRF protection if needed
+  - [ ] API rate limiting
 
-### 🛡️ Additional Security Features - MEDIUM PRIORITY
+### 8. Error Handling & Logging
+- [ ] **Global Exception Handler**
+  - [ ] Handle validation errors
+  - [ ] Database constraint violations
+  - [ ] Custom business logic exceptions
+  - [ ] Return consistent error responses
 
-- [ ] **Enhanced Rate Limiting**
-  - Add IP-based rate limiting alongside fingerprint
-  - Implement sliding window rate limiting
-  - Add rate limit headers to responses
+- [ ] **Logging Configuration**
+  - [ ] Structured logging with appropriate levels
+  - [ ] Log API requests/responses
+  - [ ] Security event logging
+  - [ ] Performance monitoring
 
-- [ ] **Content Moderation**
-  - Add profanity filter for trainer names and messages
-  - Implement reporting system for inappropriate content
-  - Admin endpoints for content moderation
+### 9. Configuration & Properties
+- [ ] **Application Properties**
+  - [ ] Database configuration
+  - [ ] API configuration (base URL, timeouts)
+  - [ ] Feature flags
+  - [ ] Environment-specific settings
 
-### 🗄️ Database Optimizations - LOW PRIORITY
+- [ ] **Profiles**
+  - [ ] Development profile
+  - [ ] Production profile  
+  - [ ] Test profile with H2 database
 
-- [ ] **Add Database Indexes**
-  - Index on `expires_at` for cleanup queries
-  - Composite index on `user_fingerprint + submitted_at`
-  - Index on `team` and `purpose` for filtering
+### 10. Testing
+- [ ] **Unit Tests**
+  - [ ] Service layer tests
+  - [ ] Repository tests with @DataJpaTest
+  - [ ] Validation logic tests
+  - [ ] Mock external dependencies
 
-- [ ] **Add Soft Delete Support**
-  - Add `deleted_at` column for soft deletion
-  - Update queries to exclude soft-deleted records
-  - Admin endpoints for permanent deletion
+- [ ] **Integration Tests**
+  - [ ] Controller integration tests with @SpringBootTest
+  - [ ] Database integration tests
+  - [ ] API endpoint tests
+  - [ ] Test containers for PostgreSQL
 
-### 🧪 Testing Enhancements - MEDIUM PRIORITY
+- [ ] **Test Data**
+  - [ ] Test fixtures and builders
+  - [ ] Sample data for development
+  - [ ] Database seeding scripts
 
-- [ ] **API Contract Testing**
-  - Add OpenAPI/Swagger contract validation
-  - Frontend-backend integration tests
-  - Test all enum values compatibility
+### 11. API Documentation
+- [ ] **OpenAPI/Swagger**
+  - [ ] Set up Swagger UI
+  - [ ] Document all endpoints
+  - [ ] Include request/response examples
+  - [ ] API versioning strategy
 
-- [ ] **Performance Testing**
-  - Load testing for friend code submission
-  - Pagination performance with large datasets
-  - Rate limiting behavior under load
+### 12. Performance & Monitoring
+- [ ] **Caching**
+  - [ ] Cache popular searches
+  - [ ] Redis configuration if needed
+  - [ ] Cache invalidation strategy
 
-### 📚 Documentation Updates - LOW PRIORITY
+- [ ] **Monitoring**
+  - [ ] Actuator endpoints
+  - [ ] Prometheus metrics
+  - [ ] Health checks
+  - [ ] Performance monitoring
 
-- [ ] **API Documentation**
-  - Update Swagger documentation with v1 paths
-  - Add examples matching frontend usage patterns
-  - Document rate limiting behavior
+### 13. DevOps & Deployment
+- [ ] **Docker**
+  - [ ] Create Dockerfile
+  - [ ] Docker Compose for local development
+  - [ ] Multi-stage builds
 
-- [ ] **Frontend Integration Guide**
-  - Create setup guide for frontend developers
-  - Document authentication flow (if added)
-  - Environment configuration examples
+- [ ] **CI/CD**
+  - [ ] GitHub Actions workflow
+  - [ ] Automated testing
+  - [ ] Code quality checks
+  - [ ] Deployment automation
 
-## Implementation Priority
+### 14. Additional Features (Future)
+- [ ] **Advanced Features**
+  - [ ] Friend code QR code generation
+  - [ ] Geolocation-based matching
+  - [ ] Friend code expiration
+  - [ ] Report/moderation system
+  - [ ] Statistics and analytics
+  - [ ] Email notifications
+  - [ ] Social media integration
 
-### Phase 1 (Immediate) 🚨
-1. Fix API path mismatch (`/api/v1/friend-codes`)
-2. Verify all enum values match frontend expectations
-3. Test pagination and filtering compatibility
+- [ ] **Admin Features**
+  - [ ] Admin dashboard API
+  - [ ] Content moderation tools
+  - [ ] User management
+  - [ ] Analytics endpoints
 
-### Phase 2 (Short-term) 📅
-1. Add theme preference endpoints
-2. Enhance rate limiting with IP support
-3. Add comprehensive API contract tests
+### 15. API Endpoints Summary
+```
+POST   /api/friend-codes              - Submit new friend code
+GET    /api/friend-codes              - Get friend codes (paginated, filtered)
+GET    /api/friend-codes/{id}         - Get specific friend code
+PUT    /api/friend-codes/{id}         - Update friend code
+DELETE /api/friend-codes/{id}         - Deactivate friend code
+GET    /api/friend-codes/search       - Search friend codes
+GET    /api/health                    - Health check
+GET    /actuator/health               - Spring actuator health
+```
 
-### Phase 3 (Long-term) 🌟
-1. Implement WebSocket for real-time updates
-2. Add analytics and metrics endpoints
-3. Implement content moderation features
+### 16. Database Schema
+```sql
+CREATE TABLE friend_codes (
+    id BIGSERIAL PRIMARY KEY,
+    friend_code VARCHAR(12) NOT NULL UNIQUE,
+    trainer_name VARCHAR(100) NOT NULL,
+    player_level INTEGER,
+    location VARCHAR(200),
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP
+);
 
-## Testing Checklist
+CREATE INDEX idx_friend_codes_active ON friend_codes(is_active);
+CREATE INDEX idx_friend_codes_created ON friend_codes(created_at);
+CREATE INDEX idx_friend_codes_location ON friend_codes(location);
+```
 
-- [ ] Verify friend code submission from frontend works
-- [ ] Test feed pagination matches frontend expectations
-- [ ] Confirm rate limiting behavior
-- [ ] Validate all Team enum values (MYSTIC, VALOR, INSTINCT)
-- [ ] Validate all Purpose enum values (GIFTS, RAIDS, BOTH)
-- [ ] Test CORS configuration with frontend domain
-- [ ] Verify ETag caching works correctly
+## Getting Started
+1. Set up PostgreSQL database
+2. Configure application properties
+3. Run Flyway migrations
+4. Implement core entities and repositories
+5. Build service layer with validation
+6. Create REST controllers
+7. Add comprehensive testing
+8. Set up monitoring and logging
 
 ## Notes
-
-- **Backend Status:** Fully functional with comprehensive validation, rate limiting, and caching
-- **Frontend Compatibility:** 95% compatible, mainly needs API path update
-- **Architecture:** Well-designed with clean separation of concerns
-- **Test Coverage:** Excellent with unit, integration, and repository tests
-- **Performance:** Optimized with caching, pagination, and database projections
-
-## Quick Fix Commands
-
-```bash
-# Update API path in controller
-sed -i 's|@RequestMapping("/api/friend-codes")|@RequestMapping("/api/v1/friend-codes")|g' \
-  src/main/java/com/devs/simplicity/poke_go_friends/controller/FriendCodeController.java
-
-# Update test paths
-find src/test -name "*.java" -exec sed -i 's|/api/friend-codes|/api/v1/friend-codes|g' {} \;
-
-# Run tests to verify changes
-./gradlew test
-```
+- Follow TDD approach - write tests first
+- Use Spring Boot best practices
+- Implement proper error handling
+- Consider rate limiting from the start
+- Plan for horizontal scaling
+- Keep security in mind for all endpoints
+- Document all APIs thoroughly
