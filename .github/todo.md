@@ -6,8 +6,8 @@ This backend provides API services for a Pokemon Go friend code sharing applicat
 ## Core Features to Implement
 
 ### 1. Data Models & Entities
-- [ ] **FriendCode Entity**
-  - [ ] Create `FriendCode` JPA entity with fields:
+- [x] **FriendCode Entity**
+  - [x] Create `FriendCode` JPA entity with fields:
     - `id` (Long, Primary Key)
     - `friendCode` (String, 12-digit code with validation)
     - `trainerName` (String, Pokemon Go trainer name)
@@ -19,15 +19,15 @@ This backend provides API services for a Pokemon Go friend code sharing applicat
     - `updatedAt` (LocalDateTime)
     - `expiresAt` (LocalDateTime, optional)
 
-- [ ] **User Entity** (if authentication is needed)
-  - [ ] Create `User` JPA entity for authentication
-  - [ ] Link FriendCode submissions to users
-  - [ ] Include basic profile information
+- [x] **User Entity** (if authentication is needed)
+  - [x] Create `User` JPA entity for authentication
+  - [x] Link FriendCode submissions to users
+  - [x] Include basic profile information
 
 ### 2. Repository Layer
-- [ ] **FriendCodeRepository**
-  - [ ] Create JPA repository interface
-  - [ ] Custom queries for:
+- [x] **FriendCodeRepository**
+  - [x] Create JPA repository interface
+  - [x] Custom queries for:
     - Finding active friend codes
     - Searching by location
     - Finding recent submissions
