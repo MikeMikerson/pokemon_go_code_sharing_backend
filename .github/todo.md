@@ -34,19 +34,19 @@ This backend provides API services for a Pokemon Go friend code sharing applicat
     - Pagination support
 
 ### 3. Service Layer  
-- [ ] **FriendCodeService**
-  - [ ] Create friend code
-  - [ ] Validate friend code format (12 digits)
-  - [ ] Get paginated list of friend codes
-  - [ ] Filter by location, level range
-  - [ ] Search functionality
-  - [ ] Mark friend code as inactive/expired
-  - [ ] Duplicate detection logic
+- [x] **FriendCodeService**
+  - [x] Create friend code
+  - [x] Validate friend code format (12 digits)
+  - [x] Get paginated list of friend codes
+  - [x] Filter by location, level range
+  - [x] Search functionality
+  - [x] Mark friend code as inactive/expired
+  - [x] Duplicate detection logic
 
-- [ ] **ValidationService**
-  - [ ] Friend code format validation
-  - [ ] Rate limiting per IP/user
-  - [ ] Content moderation (inappropriate names/descriptions)
+- [x] **ValidationService**
+  - [x] Friend code format validation
+  - [x] Rate limiting per IP/user
+  - [x] Content moderation (inappropriate names/descriptions)
 
 ### 4. Controller Layer
 - [ ] **FriendCodeController** REST API endpoints:

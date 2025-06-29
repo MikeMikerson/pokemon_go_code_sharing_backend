@@ -1,0 +1,314 @@
+package com.devs.simplicity.poke_go_friends.service;
+
+import com.devs.simplicity.poke_go_friends.exception.ValidationException;
+import com.devs.simplicity.poke_go_friends.exception.RateLimitExceededException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.regex.Pattern;
+
+/**
+ * Service responsible for validating friend codes, trainer names, descriptions,
+ * and implementing rate limiting and content moderation.
+ */
+@Service
+@Slf4j
+public class ValidationService {
+
+    // Friend code validation pattern (exactly 12 digits)
+    private static final Pattern FRIEND_CODE_PATTERN = Pattern.compile("^\\d{12}$");
+    
+    // Trainer name validation pattern (letters, numbers, spaces, basic punctuation)
+    private static final Pattern TRAINER_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s._-]+$");
+    
+    // Rate limiting storage (in production, use Redis or proper cache)
+    private final ConcurrentHashMap<String, RateLimitData> rateLimitMap = new ConcurrentHashMap<>();
+    
+    // Configurable rate limits
+    private static final int SUBMISSIONS_PER_HOUR_PER_IP = 5;
+    private static final int SUBMISSIONS_PER_DAY_PER_USER = 10;
+    
+    // Inappropriate content detection (basic implementation)
+    private static final Set<String> INAPPROPRIATE_WORDS = new HashSet<>(Arrays.asList(
+        // Basic inappropriate words for demonstration
+        "spam", "hack", "cheat", "bot", "fake", "scam", "sell", "buy", "money"
+        // In production, use a more comprehensive list or external service
+    ));
+
+    /**
+     * Validates a Pokemon Go friend code format.
+     *
+     * @param friendCode The friend code to validate
+     * @throws ValidationException if the friend code is invalid
+     */
+    public void validateFriendCodeFormat(String friendCode) {
+        log.debug("Validating friend code format: {}", friendCode);
+        
+        if (!StringUtils.hasText(friendCode)) {
+            throw new ValidationException("Friend code cannot be empty");
+        }
+
+        if (!FRIEND_CODE_PATTERN.matcher(friendCode).matches()) {
+            throw new ValidationException("Friend code must be exactly 12 digits");
+        }
+
+        log.debug("Friend code format validation passed: {}", friendCode);
+    }
+
+    /**
+     * Validates trainer name format and content.
+     *
+     * @param trainerName The trainer name to validate
+     * @throws ValidationException if the trainer name is invalid
+     */
+    public void validateTrainerName(String trainerName) {
+        log.debug("Validating trainer name: {}", trainerName);
+        
+        if (!StringUtils.hasText(trainerName)) {
+            throw new ValidationException("Trainer name cannot be empty");
+        }
+
+        if (trainerName.length() < 2 || trainerName.length() > 100) {
+            throw new ValidationException("Trainer name must be between 2 and 100 characters");
+        }
+
+        if (!TRAINER_NAME_PATTERN.matcher(trainerName).matches()) {
+            throw new ValidationException("Trainer name contains invalid characters");
+        }
+
+        if (containsInappropriateContent(trainerName)) {
+            throw new ValidationException("Trainer name contains inappropriate content");
+        }
+
+        log.debug("Trainer name validation passed: {}", trainerName);
+    }
+
+    /**
+     * Validates player level if provided.
+     *
+     * @param playerLevel The player level to validate (can be null)
+     * @throws ValidationException if the player level is invalid
+     */
+    public void validatePlayerLevel(Integer playerLevel) {
+        if (playerLevel == null) {
+            return; // Optional field
+        }
+
+        log.debug("Validating player level: {}", playerLevel);
+
+        if (playerLevel < 1 || playerLevel > 50) {
+            throw new ValidationException("Player level must be between 1 and 50");
+        }
+
+        log.debug("Player level validation passed: {}", playerLevel);
+    }
+
+    /**
+     * Validates location format and content.
+     *
+     * @param location The location to validate (can be null)
+     * @throws ValidationException if the location is invalid
+     */
+    public void validateLocation(String location) {
+        if (!StringUtils.hasText(location)) {
+            return; // Optional field
+        }
+
+        log.debug("Validating location: {}", location);
+
+        if (location.length() > 200) {
+            throw new ValidationException("Location cannot exceed 200 characters");
+        }
+
+        if (containsInappropriateContent(location)) {
+            throw new ValidationException("Location contains inappropriate content");
+        }
+
+        log.debug("Location validation passed: {}", location);
+    }
+
+    /**
+     * Validates description content.
+     *
+     * @param description The description to validate (can be null)
+     * @throws ValidationException if the description is invalid
+     */
+    public void validateDescription(String description) {
+        if (!StringUtils.hasText(description)) {
+            return; // Optional field
+        }
+
+        log.debug("Validating description: {}", description);
+
+        if (description.length() > 1000) {
+            throw new ValidationException("Description cannot exceed 1000 characters");
+        }
+
+        if (containsInappropriateContent(description)) {
+            throw new ValidationException("Description contains inappropriate content");
+        }
+
+        log.debug("Description validation passed");
+    }
+
+    /**
+     * Checks rate limiting for IP address.
+     *
+     * @param ipAddress The IP address to check
+     * @throws RateLimitExceededException if rate limit is exceeded
+     */
+    public void checkRateLimitByIp(String ipAddress) {
+        log.debug("Checking rate limit for IP: {}", ipAddress);
+        
+        String key = "ip:" + ipAddress;
+        RateLimitData limitData = rateLimitMap.computeIfAbsent(key, k -> new RateLimitData());
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneHourAgo = now.minus(1, ChronoUnit.HOURS);
+        
+        // Clean up old entries
+        limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneHourAgo));
+        
+        if (limitData.getTimestamps().size() >= SUBMISSIONS_PER_HOUR_PER_IP) {
+            log.warn("Rate limit exceeded for IP: {}", ipAddress);
+            throw new RateLimitExceededException(ipAddress, "IP hourly limit");
+        }
+        
+        limitData.getTimestamps().add(now);
+        log.debug("Rate limit check passed for IP: {}", ipAddress);
+    }
+
+    /**
+     * Checks rate limiting for user.
+     *
+     * @param userId The user ID to check
+     * @throws RateLimitExceededException if rate limit is exceeded
+     */
+    public void checkRateLimitByUser(Long userId) {
+        if (userId == null) {
+            return; // Anonymous submissions only limited by IP
+        }
+
+        log.debug("Checking rate limit for user: {}", userId);
+        
+        String key = "user:" + userId;
+        RateLimitData limitData = rateLimitMap.computeIfAbsent(key, k -> new RateLimitData());
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneDayAgo = now.minus(1, ChronoUnit.DAYS);
+        
+        // Clean up old entries
+        limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneDayAgo));
+        
+        if (limitData.getTimestamps().size() >= SUBMISSIONS_PER_DAY_PER_USER) {
+            log.warn("Rate limit exceeded for user: {}", userId);
+            throw new RateLimitExceededException("user:" + userId, "User daily limit");
+        }
+        
+        limitData.getTimestamps().add(now);
+        log.debug("Rate limit check passed for user: {}", userId);
+    }
+
+    /**
+     * Validates all friend code submission data.
+     *
+     * @param friendCode   The friend code
+     * @param trainerName  The trainer name
+     * @param playerLevel  The player level (optional)
+     * @param location     The location (optional)
+     * @param description  The description (optional)
+     * @param ipAddress    The submitter's IP address
+     * @param userId       The submitter's user ID (optional for anonymous)
+     * @throws ValidationException if any validation fails
+     * @throws RateLimitExceededException if rate limits are exceeded
+     */
+    public void validateFriendCodeSubmission(String friendCode, String trainerName, 
+                                           Integer playerLevel, String location, 
+                                           String description, String ipAddress, Long userId) {
+        log.info("Validating friend code submission for IP: {}, User: {}", ipAddress, userId);
+        
+        // Rate limiting checks first
+        checkRateLimitByIp(ipAddress);
+        checkRateLimitByUser(userId);
+        
+        // Content validation
+        validateFriendCodeFormat(friendCode);
+        validateTrainerName(trainerName);
+        validatePlayerLevel(playerLevel);
+        validateLocation(location);
+        validateDescription(description);
+        
+        log.info("Friend code submission validation completed successfully");
+    }
+
+    /**
+     * Checks if text contains inappropriate content.
+     *
+     * @param text The text to check
+     * @return true if inappropriate content is detected
+     */
+    private boolean containsInappropriateContent(String text) {
+        if (!StringUtils.hasText(text)) {
+            return false;
+        }
+        
+        String lowerText = text.toLowerCase();
+        return INAPPROPRIATE_WORDS.stream()
+                .anyMatch(lowerText::contains);
+    }
+
+    /**
+     * Cleans up old rate limiting data (should be called periodically).
+     */
+    public void cleanupRateLimitData() {
+        log.debug("Cleaning up old rate limiting data");
+        
+        LocalDateTime cutoff = LocalDateTime.now().minus(24, ChronoUnit.HOURS);
+        
+        rateLimitMap.entrySet().removeIf(entry -> {
+            RateLimitData data = entry.getValue();
+            data.getTimestamps().removeIf(timestamp -> timestamp.isBefore(cutoff));
+            return data.getTimestamps().isEmpty();
+        });
+        
+        log.debug("Rate limiting data cleanup completed");
+    }
+
+    /**
+     * Gets current rate limit status for IP.
+     *
+     * @param ipAddress The IP address
+     * @return current usage count within the hour
+     */
+    public int getCurrentRateLimitUsage(String ipAddress) {
+        String key = "ip:" + ipAddress;
+        RateLimitData limitData = rateLimitMap.get(key);
+        
+        if (limitData == null) {
+            return 0;
+        }
+        
+        LocalDateTime oneHourAgo = LocalDateTime.now().minus(1, ChronoUnit.HOURS);
+        limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneHourAgo));
+        
+        return limitData.getTimestamps().size();
+    }
+
+    /**
+     * Data structure for storing rate limiting information.
+     */
+    private static class RateLimitData {
+        private final Set<LocalDateTime> timestamps = ConcurrentHashMap.newKeySet();
+        
+        public Set<LocalDateTime> getTimestamps() {
+            return timestamps;
+        }
+    }
+}
