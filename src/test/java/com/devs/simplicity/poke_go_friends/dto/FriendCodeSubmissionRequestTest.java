@@ -128,7 +128,7 @@ class FriendCodeSubmissionRequestTest {
             assertThat(violations).extracting(ConstraintViolation::getMessage)
                 .containsExactlyInAnyOrder(
                     "Friend code is required",
-                    "Friend code must be exactly 12 digits");
+                    "Friend code must be exactly 12 digits (spaces and dashes will be removed)");
         }
 
         @Test
@@ -144,7 +144,7 @@ class FriendCodeSubmissionRequestTest {
             // Assert
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Friend code must be exactly 12 digits");
+                .isEqualTo("Friend code must be exactly 12 digits (spaces and dashes will be removed)");
         }
 
         @Test
@@ -160,7 +160,7 @@ class FriendCodeSubmissionRequestTest {
             // Assert
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Friend code must be exactly 12 digits");
+                .isEqualTo("Friend code must be exactly 12 digits (spaces and dashes will be removed)");
         }
 
         @Test
@@ -176,7 +176,7 @@ class FriendCodeSubmissionRequestTest {
             // Assert
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Friend code must be exactly 12 digits");
+                .isEqualTo("Friend code must be exactly 12 digits (spaces and dashes will be removed)");
         }
     }
 
@@ -211,11 +211,12 @@ class FriendCodeSubmissionRequestTest {
             Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
 
             // Assert
-            assertThat(violations).hasSize(2);
+            assertThat(violations).hasSize(3);
             assertThat(violations).extracting(ConstraintViolation::getMessage)
                 .containsExactlyInAnyOrder(
                     "Trainer name is required",
-                    "Trainer name must be between 2 and 100 characters");
+                    "Trainer name must be between 2 and 100 characters",
+                    "Trainer name can only contain letters, numbers, spaces, periods, underscores, and hyphens");
         }
 
         @Test

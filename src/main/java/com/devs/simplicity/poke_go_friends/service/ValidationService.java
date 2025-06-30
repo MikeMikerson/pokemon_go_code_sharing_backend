@@ -1,7 +1,9 @@
 package com.devs.simplicity.poke_go_friends.service;
 
+import com.devs.simplicity.poke_go_friends.config.RateLimitConfig;
 import com.devs.simplicity.poke_go_friends.exception.ValidationException;
 import com.devs.simplicity.poke_go_friends.exception.RateLimitExceededException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -20,25 +22,34 @@ import java.util.regex.Pattern;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ValidationService {
+
+    private final RateLimitConfig rateLimitConfig;
+    private final InputSanitizationService sanitizationService;
 
     // Friend code validation pattern (exactly 12 digits)
     private static final Pattern FRIEND_CODE_PATTERN = Pattern.compile("^\\d{12}$");
     
-    // Trainer name validation pattern (letters, numbers, spaces, basic punctuation)
-    private static final Pattern TRAINER_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s._-]+$");
+    // Enhanced trainer name validation pattern (letters, numbers, spaces, limited punctuation)
+    // Allows Unicode letters for international names
+    private static final Pattern TRAINER_NAME_PATTERN = Pattern.compile("^[\\p{L}\\p{N}\\s._-]+$");
+    
+    // Pattern to detect suspicious character sequences
+    private static final Pattern SUSPICIOUS_PATTERN = Pattern.compile("(.)\\1{4,}"); // 5+ repeated chars
     
     // Rate limiting storage (in production, use Redis or proper cache)
     private final ConcurrentHashMap<String, RateLimitData> rateLimitMap = new ConcurrentHashMap<>();
     
-    // Configurable rate limits
-    private static final int SUBMISSIONS_PER_HOUR_PER_IP = 5;
-    private static final int SUBMISSIONS_PER_DAY_PER_USER = 10;
+    // Configurable rate limits (use configuration values)
+    // Default values are overridden by RateLimitConfig
     
-    // Inappropriate content detection (basic implementation)
+    // Enhanced inappropriate content detection
     private static final Set<String> INAPPROPRIATE_WORDS = new HashSet<>(Arrays.asList(
         // Basic inappropriate words for demonstration
-        "spam", "hack", "cheat", "bot", "fake", "scam", "sell", "buy", "money"
+        "spam", "hack", "cheat", "bot", "fake", "scam", "sell", "buy", "money",
+        "trading", "trade", "discord", "telegram", "whatsapp", "cash", "venmo",
+        "paypal", "bitcoin", "crypto", "onlyfans", "adult", "xxx", "porn"
         // In production, use a more comprehensive list or external service
     ));
 
@@ -55,7 +66,10 @@ public class ValidationService {
             throw new ValidationException("Friend code cannot be empty");
         }
 
-        if (!FRIEND_CODE_PATTERN.matcher(friendCode).matches()) {
+        // Remove any spaces or dashes that users might add
+        String cleanCode = friendCode.replaceAll("[\\s-]", "");
+        
+        if (!FRIEND_CODE_PATTERN.matcher(cleanCode).matches()) {
             throw new ValidationException("Friend code must be exactly 12 digits");
         }
 
@@ -75,19 +89,32 @@ public class ValidationService {
             throw new ValidationException("Trainer name cannot be empty");
         }
 
-        if (trainerName.length() < 2 || trainerName.length() > 100) {
+        // Sanitize the trainer name
+        String sanitized = sanitizationService.sanitizeTrainerName(trainerName);
+        
+        // Check if sanitization removed too much content
+        if (!sanitizationService.isValidAfterSanitization(trainerName, sanitized)) {
+            throw new ValidationException("Trainer name contains too many invalid characters");
+        }
+
+        if (sanitized.length() < 2 || sanitized.length() > 100) {
             throw new ValidationException("Trainer name must be between 2 and 100 characters");
         }
 
-        if (!TRAINER_NAME_PATTERN.matcher(trainerName).matches()) {
-            throw new ValidationException("Trainer name contains invalid characters");
+        if (!TRAINER_NAME_PATTERN.matcher(sanitized).matches()) {
+            throw new ValidationException("Trainer name contains invalid characters. Only letters, numbers, spaces, periods, underscores, and hyphens are allowed");
         }
 
-        if (containsInappropriateContent(trainerName)) {
+        // Check for suspicious patterns (repeated characters)
+        if (SUSPICIOUS_PATTERN.matcher(sanitized).find()) {
+            throw new ValidationException("Trainer name contains suspicious character patterns");
+        }
+
+        if (containsInappropriateContent(sanitized)) {
             throw new ValidationException("Trainer name contains inappropriate content");
         }
 
-        log.debug("Trainer name validation passed: {}", trainerName);
+        log.debug("Trainer name validation passed: {}", sanitized);
     }
 
     /**
@@ -123,15 +150,23 @@ public class ValidationService {
 
         log.debug("Validating location: {}", location);
 
-        if (location.length() > 200) {
+        // Sanitize the location
+        String sanitized = sanitizationService.sanitizeLocation(location);
+        
+        // Check if sanitization removed too much content
+        if (!sanitizationService.isValidAfterSanitization(location, sanitized)) {
+            throw new ValidationException("Location contains too many invalid characters");
+        }
+
+        if (sanitized.length() > 200) {
             throw new ValidationException("Location cannot exceed 200 characters");
         }
 
-        if (containsInappropriateContent(location)) {
+        if (containsInappropriateContent(sanitized)) {
             throw new ValidationException("Location contains inappropriate content");
         }
 
-        log.debug("Location validation passed: {}", location);
+        log.debug("Location validation passed: {}", sanitized);
     }
 
     /**
@@ -147,11 +182,19 @@ public class ValidationService {
 
         log.debug("Validating description: {}", description);
 
-        if (description.length() > 1000) {
+        // Sanitize the description
+        String sanitized = sanitizationService.sanitizeDescription(description);
+        
+        // Check if sanitization removed too much content
+        if (!sanitizationService.isValidAfterSanitization(description, sanitized)) {
+            throw new ValidationException("Description contains too many invalid characters");
+        }
+
+        if (sanitized.length() > 1000) {
             throw new ValidationException("Description cannot exceed 1000 characters");
         }
 
-        if (containsInappropriateContent(description)) {
+        if (containsInappropriateContent(sanitized)) {
             throw new ValidationException("Description contains inappropriate content");
         }
 
@@ -165,6 +208,10 @@ public class ValidationService {
      * @throws RateLimitExceededException if rate limit is exceeded
      */
     public void checkRateLimitByIp(String ipAddress) {
+        if (!rateLimitConfig.isEnabled()) {
+            return;
+        }
+        
         log.debug("Checking rate limit for IP: {}", ipAddress);
         
         String key = "ip:" + ipAddress;
@@ -176,7 +223,7 @@ public class ValidationService {
         // Clean up old entries
         limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneHourAgo));
         
-        if (limitData.getTimestamps().size() >= SUBMISSIONS_PER_HOUR_PER_IP) {
+        if (limitData.getTimestamps().size() >= rateLimitConfig.getSubmissionsPerHourPerIp()) {
             log.warn("Rate limit exceeded for IP: {}", ipAddress);
             throw new RateLimitExceededException(ipAddress, "IP hourly limit");
         }
@@ -192,7 +239,7 @@ public class ValidationService {
      * @throws RateLimitExceededException if rate limit is exceeded
      */
     public void checkRateLimitByUser(Long userId) {
-        if (userId == null) {
+        if (userId == null || !rateLimitConfig.isEnabled()) {
             return; // Anonymous submissions only limited by IP
         }
 
@@ -207,7 +254,7 @@ public class ValidationService {
         // Clean up old entries
         limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneDayAgo));
         
-        if (limitData.getTimestamps().size() >= SUBMISSIONS_PER_DAY_PER_USER) {
+        if (limitData.getTimestamps().size() >= rateLimitConfig.getSubmissionsPerDayPerUser()) {
             log.warn("Rate limit exceeded for user: {}", userId);
             throw new RateLimitExceededException("user:" + userId, "User daily limit");
         }

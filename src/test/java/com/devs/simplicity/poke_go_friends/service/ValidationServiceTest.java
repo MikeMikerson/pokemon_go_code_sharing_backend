@@ -1,5 +1,6 @@
 package com.devs.simplicity.poke_go_friends.service;
 
+import com.devs.simplicity.poke_go_friends.config.RateLimitConfig;
 import com.devs.simplicity.poke_go_friends.exception.RateLimitExceededException;
 import com.devs.simplicity.poke_go_friends.exception.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,8 +9,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 /**
  * Comprehensive unit tests for ValidationService.
@@ -17,10 +22,29 @@ import static org.assertj.core.api.Assertions.*;
 class ValidationServiceTest {
 
     private ValidationService validationService;
+    
+    @Mock
+    private RateLimitConfig rateLimitConfig;
+    
+    @Mock
+    private InputSanitizationService sanitizationService;
 
     @BeforeEach
     void setUp() {
-        validationService = new ValidationService();
+        MockitoAnnotations.openMocks(this);
+        
+        // Setup default behavior for mocks
+        when(rateLimitConfig.isEnabled()).thenReturn(true);
+        when(rateLimitConfig.getSubmissionsPerHourPerIp()).thenReturn(5);
+        when(rateLimitConfig.getSubmissionsPerDayPerUser()).thenReturn(10);
+        
+        // Setup sanitization service to return input unchanged by default
+        when(sanitizationService.sanitizeTrainerName(anyString())).thenAnswer(i -> i.getArgument(0));
+        when(sanitizationService.sanitizeLocation(anyString())).thenAnswer(i -> i.getArgument(0));
+        when(sanitizationService.sanitizeDescription(anyString())).thenAnswer(i -> i.getArgument(0));
+        when(sanitizationService.isValidAfterSanitization(anyString(), anyString())).thenReturn(true);
+        
+        validationService = new ValidationService(rateLimitConfig, sanitizationService);
     }
 
     @Nested
@@ -34,9 +58,19 @@ class ValidationServiceTest {
                 validationService.validateFriendCodeFormat("123456789012"));
         }
 
+        @Test
+        @DisplayName("Should accept friend codes with spaces and dashes")
+        void shouldAcceptFriendCodesWithSpacesAndDashes() {
+            assertThatNoException().isThrownBy(() -> 
+                validationService.validateFriendCodeFormat("123 456 789 012"));
+            assertThatNoException().isThrownBy(() -> 
+                validationService.validateFriendCodeFormat("123-456-789-012"));
+            assertThatNoException().isThrownBy(() -> 
+                validationService.validateFriendCodeFormat("1234 5678 9012"));
+        }
+
         @ParameterizedTest
-        @ValueSource(strings = {"12345678901", "1234567890123", "12345678901a", 
-                               "abcd12345678", "123 456 789 012", "123-456-789-012"})
+        @ValueSource(strings = {"12345678901", "1234567890123", "12345678901a", "abcd12345678"})
         @DisplayName("Should reject invalid friend codes")
         void shouldRejectInvalidFriendCodes(String invalidCode) {
             assertThatThrownBy(() -> validationService.validateFriendCodeFormat(invalidCode))

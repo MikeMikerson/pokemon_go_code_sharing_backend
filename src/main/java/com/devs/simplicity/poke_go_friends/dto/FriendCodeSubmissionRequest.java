@@ -15,11 +15,14 @@ import lombok.AllArgsConstructor;
 public class FriendCodeSubmissionRequest {
 
     @NotBlank(message = "Friend code is required")
-    @Pattern(regexp = "\\d{12}", message = "Friend code must be exactly 12 digits")
+    @Pattern(regexp = "^\\d{12}$|^\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}$", 
+             message = "Friend code must be exactly 12 digits (spaces and dashes will be removed)")
     private String friendCode;
 
     @NotBlank(message = "Trainer name is required")
     @Size(min = 2, max = 100, message = "Trainer name must be between 2 and 100 characters")
+    @Pattern(regexp = "^[\\p{L}\\p{N}\\s._-]+$", 
+             message = "Trainer name can only contain letters, numbers, spaces, periods, underscores, and hyphens")
     private String trainerName;
 
     @Min(value = 1, message = "Player level must be at least 1")
