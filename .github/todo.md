@@ -1,244 +1,71 @@
-# Pokemon Go Code Sharing Backend - TODO
+# Backend Sync Requirements Todo List
 
-## Project Overview
-This backend provides API services for a Pokemon Go friend code sharing application. The frontend allows users to submit, view, and share friend codes with other Pokemon Go players.
+Based on analysis of the frontend (`simple_pokemon_go_code_sharing`) and backend (`poke-go-friends`), here are the tasks needed to sync the backend with frontend expectations:
 
-## Core Features to Implement
+## API Structure & CORS
+- [ ] **Add CORS configuration** - Frontend expects to call backend from different origin (localhost:3000 to localhost:8080)
+- [ ] **Verify API base path** - Frontend expects `/api/*` endpoints, backend provides `/api/*` ✅
+- [ ] **Add API versioning support** - Frontend uses `/api/` but no version prefix currently
 
-### 1. Data Models & Entities
-- [x] **FriendCode Entity**
-  - [x] Create `FriendCode` JPA entity with fields:
-    - `id` (Long, Primary Key)
-    - `friendCode` (String, 12-digit code with validation)
-    - `trainerName` (String, Pokemon Go trainer name)
-    - `playerLevel` (Integer, optional)
-    - `location` (String, optional - city/country)
-    - `description` (String, optional - what they're looking for)
-    - `isActive` (Boolean, default true)
-    - `createdAt` (LocalDateTime)
-    - `updatedAt` (LocalDateTime)
-    - `expiresAt` (LocalDateTime, optional)
+## Missing Endpoints
+- [x] **Add actuator health endpoint mapping** - Frontend calls `/api/health` but backend has custom health controller, need to verify compatibility ✅ (Both endpoints working)
+- [x] **Verify health response format** - Frontend expects `{status: 'UP'|'DOWN', timestamp: string}` format ✅ (Confirmed working)
 
-- [x] **User Entity** (if authentication is needed)
-  - [x] Create `User` JPA entity for authentication
-  - [x] Link FriendCode submissions to users
-  - [x] Include basic profile information
+## Data Structure Gaps
+- [ ] **Add team field support** - Frontend sends Pokemon Go team (`mystic`|`valor`|`instinct`) but backend doesn't store it
+- [ ] **Add goals field support** - Frontend sends goals array (`gifts`|`exp`|`raids`|`all`) but backend doesn't store it
+- [ ] **Update FriendCode entity** - Add team and goals fields to database schema
+- [ ] **Update DTOs** - Add team and goals to FriendCodeSubmissionRequest and FriendCodeResponse
+- [ ] **Create database migration** - Add team and goals columns to friend_codes table
 
-### 2. Repository Layer
-- [x] **FriendCodeRepository**
-  - [x] Create JPA repository interface
-  - [x] Custom queries for:
-    - Finding active friend codes
-    - Searching by location
-    - Finding recent submissions
-    - Pagination support
+## Validation Alignment
+- [ ] **Sync friend code validation** - Frontend expects exactly 12 digits, backend has same validation ✅
+- [ ] **Sync trainer level validation** - Frontend expects 1-50, backend has same validation ✅
+- [ ] **Add team validation** - Backend needs to validate team enum values
+- [ ] **Add goals validation** - Backend needs to validate goals array values
+- [ ] **Update trainer name validation** - Frontend allows optional trainer name, backend requires it
 
-### 3. Service Layer  
-- [x] **FriendCodeService**
-  - [x] Create friend code
-  - [x] Validate friend code format (12 digits)
-  - [x] Get paginated list of friend codes
-  - [x] Filter by location, level range
-  - [x] Search functionality
-  - [x] Mark friend code as inactive/expired
-  - [x] Duplicate detection logic
+## Response Format Adjustments
+- [ ] **Update error response format** - Ensure ValidationError responses include fieldErrors map
+- [ ] **Add proper HTTP status codes** - Verify rate limiting returns 429 with Retry-After header
+- [ ] **Update pagination response** - Verify FriendCodeFeedResponse matches frontend expectations
 
-- [x] **ValidationService**
-  - [x] Friend code format validation
-  - [x] Rate limiting per IP/user
-  - [x] Content moderation (inappropriate names/descriptions)
+## Frontend-Backend Mapping Issues
+- [ ] **Fix trainer name mapping** - Frontend uses `trainerName` field, backend expects required field
+- [ ] **Fix player level mapping** - Frontend sends `trainerLevel` as string, backend expects `playerLevel` as integer
+- [ ] **Add default expiration logic** - Frontend expects `expiresAt` field, backend should set default 24-48 hour expiration
 
-### 4. Controller Layer
-- [x] **FriendCodeController** REST API endpoints:
-  - [x] `POST /api/friend-codes` - Submit new friend code
-  - [x] `GET /api/friend-codes` - Get paginated list with filters
-  - [x] `GET /api/friend-codes/{id}` - Get specific friend code
-  - [x] `PUT /api/friend-codes/{id}` - Update friend code (if owned)
-  - [x] `DELETE /api/friend-codes/{id}` - Deactivate friend code
-  - [x] `GET /api/friend-codes/search` - Search with query parameters
+## Rate Limiting & Security
+- [ ] **Implement proper rate limiting** - Frontend expects rate limit errors with retry information
+- [ ] **Add IP-based rate limiting** - For anonymous submissions
+- [ ] **Add proper error handling** - For rate limit exceeded scenarios
 
-- [x] **HealthController** 
-  - [x] Basic health check endpoint
-  - [x] Database connectivity check
+## Database & Configuration
+- [x] **Add PostgreSQL setup documentation** - For local development ✅ (Docker Compose setup working)
+- [ ] **Add Flyway migration for new fields** - team and goals columns
+- [x] **Update application properties** - For any new configuration needed ✅ (Database connection configured)
 
-### 5. DTOs (Data Transfer Objects)
-- [x] **FriendCodeSubmissionRequest**
-  - [x] Validation annotations
-  - [x] Required fields: friendCode, trainerName
-  - [x] Optional fields: playerLevel, location, description
+## Testing & Validation
+- [ ] **Add integration tests** - For new team and goals functionality
+- [ ] **Test CORS configuration** - Ensure frontend can communicate with backend
+- [ ] **Test all API endpoints** - Verify frontend compatibility
+- [ ] **Test error handling** - Ensure proper error responses
 
-- [x] **FriendCodeResponse**
-  - [x] Public response format
-  - [x] Include all safe fields to display
+## Documentation Updates
+- [ ] **Update API documentation** - Include new team and goals fields
+- [ ] **Update README** - With setup instructions for both frontend and backend
+- [ ] **Add environment configuration guide** - For connecting frontend to backend
 
-- [x] **FriendCodeFeedResponse** 
-  - [x] Paginated response wrapper
-  - [x] Include metadata (total count, page info)
-
-- [x] **ErrorResponse**
-  - [x] Standardized error format
-  - [x] Include error codes and messages
-
-- [x] **FriendCodeUpdateRequest**
-  - [x] Optional field updates
-  - [x] Validation annotations
-  - [x] Update detection logic
-
-### 6. Database Configuration
-- [x] **Database Setup**
-  - [x] Configure PostgreSQL connection
-  - [x] Set up connection pooling
-  - [x] Configure for different environments (dev, prod)
-
-- [x] **Flyway Migrations**
-  - [x] Create initial schema migration
-  - [x] Add indexes for common queries
-  - [x] Set up versioning strategy
-
-### 7. Security & Validation
-- [x] **Input Validation**
-  - [x] Friend code format validation (exactly 12 digits)
-  - [x] Trainer name length and character validation
-  - [x] Sanitize all text inputs
-  - [x] Rate limiting configuration
-
-### 8. Error Handling & Logging
-- [ ] **Global Exception Handler**
-  - [ ] Handle validation errors
-  - [ ] Database constraint violations
-  - [ ] Custom business logic exceptions
-  - [ ] Return consistent error responses
-
-- [ ] **Logging Configuration**
-  - [ ] Structured logging with appropriate levels
-  - [ ] Log API requests/responses
-  - [ ] Security event logging
-  - [ ] Performance monitoring
-
-### 9. Configuration & Properties
-- [ ] **Application Properties**
-  - [ ] Database configuration
-  - [ ] API configuration (base URL, timeouts)
-  - [ ] Feature flags
-  - [ ] Environment-specific settings
-
-- [ ] **Profiles**
-  - [ ] Development profile
-  - [ ] Production profile  
-  - [ ] Test profile with H2 database
-
-### 10. Testing
-- [ ] **Unit Tests**
-  - [ ] Service layer tests
-  - [ ] Repository tests with @DataJpaTest
-  - [ ] Validation logic tests
-  - [ ] Mock external dependencies
-
-- [ ] **Integration Tests**
-  - [ ] Controller integration tests with @SpringBootTest
-  - [ ] Database integration tests
-  - [ ] API endpoint tests
-  - [ ] Test containers for PostgreSQL
-
-- [ ] **Test Data**
-  - [ ] Test fixtures and builders
-  - [ ] Sample data for development
-  - [ ] Database seeding scripts
-
-### 11. API Documentation
-- [ ] **OpenAPI/Swagger**
-  - [ ] Set up Swagger UI
-  - [ ] Document all endpoints
-  - [ ] Include request/response examples
-  - [ ] API versioning strategy
-
-### 12. Performance & Monitoring
-- [ ] **Caching**
-  - [ ] Cache popular searches
-  - [ ] Redis configuration if needed
-  - [ ] Cache invalidation strategy
-
-- [ ] **Monitoring**
-  - [ ] Actuator endpoints
-  - [ ] Prometheus metrics
-  - [ ] Health checks
-  - [ ] Performance monitoring
-
-### 13. DevOps & Deployment
-- [ ] **Docker**
-  - [ ] Create Dockerfile
-  - [ ] Docker Compose for local development
-  - [ ] Multi-stage builds
-
-- [ ] **CI/CD**
-  - [ ] GitHub Actions workflow
-  - [ ] Automated testing
-  - [ ] Code quality checks
-  - [ ] Deployment automation
-
-### 14. Additional Features (Future)
-- [ ] **Advanced Features**
-  - [ ] Friend code QR code generation
-  - [ ] Geolocation-based matching
-  - [ ] Friend code expiration
-  - [ ] Report/moderation system
-  - [ ] Statistics and analytics
-  - [ ] Email notifications
-  - [ ] Social media integration
-
-- [ ] **Admin Features**
-  - [ ] Admin dashboard API
-  - [ ] Content moderation tools
-  - [ ] User management
-  - [ ] Analytics endpoints
-
-### 15. API Endpoints Summary
-```
-POST   /api/friend-codes              - Submit new friend code
-GET    /api/friend-codes              - Get friend codes (paginated, filtered)
-GET    /api/friend-codes/{id}         - Get specific friend code
-PUT    /api/friend-codes/{id}         - Update friend code
-DELETE /api/friend-codes/{id}         - Deactivate friend code
-GET    /api/friend-codes/search       - Search friend codes
-GET    /api/health                    - Health check
-GET    /actuator/health               - Spring actuator health
-```
-
-### 16. Database Schema
-```sql
-CREATE TABLE friend_codes (
-    id BIGSERIAL PRIMARY KEY,
-    friend_code VARCHAR(12) NOT NULL UNIQUE,
-    trainer_name VARCHAR(100) NOT NULL,
-    player_level INTEGER,
-    location VARCHAR(200),
-    description TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP
-);
-
-CREATE INDEX idx_friend_codes_active ON friend_codes(is_active);
-CREATE INDEX idx_friend_codes_created ON friend_codes(created_at);
-CREATE INDEX idx_friend_codes_location ON friend_codes(location);
-```
-
-## Getting Started
-1. Set up PostgreSQL database
-2. Configure application properties
-3. Run Flyway migrations
-4. Implement core entities and repositories
-5. Build service layer with validation
-6. Create REST controllers
-7. Add comprehensive testing
-8. Set up monitoring and logging
+## Priority Order
+1. **High Priority**: CORS configuration, team/goals fields, validation alignment
+2. **Medium Priority**: Error response format, rate limiting, database migration
+3. **Low Priority**: Documentation updates, testing improvements
 
 ## Notes
-- Follow TDD approach - write tests first
-- Use Spring Boot best practices
-- Implement proper error handling
-- Consider rate limiting from the start
-- Plan for horizontal scaling
-- Keep security in mind for all endpoints
-- Document all APIs thoroughly
+- The backend has good foundational structure with proper controllers, services, and DTOs
+- Most core functionality exists, mainly missing Pokemon Go specific fields (team, goals)
+- Rate limiting is configured but may need adjustment for frontend integration
+- Health endpoints exist but may need format verification
+- ✅ **Database setup completed** - PostgreSQL connection working, all migrations applied successfully
+- ✅ **Schema validation fixed** - Missing user_id column added, relationships working properly
+- ✅ **Docker Compose configuration verified** - Backend and database containers communicating correctly

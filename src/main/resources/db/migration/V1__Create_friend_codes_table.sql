@@ -11,7 +11,8 @@ CREATE TABLE friend_codes (
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    expires_at TIMESTAMP
+    expires_at TIMESTAMP,
+    user_id BIGINT
 );
 
 -- Add comments for documentation
@@ -26,6 +27,7 @@ COMMENT ON COLUMN friend_codes.is_active IS 'Whether the friend code is still ac
 COMMENT ON COLUMN friend_codes.created_at IS 'When the friend code was first submitted';
 COMMENT ON COLUMN friend_codes.updated_at IS 'When the friend code was last updated';
 COMMENT ON COLUMN friend_codes.expires_at IS 'Optional expiration date for the friend code';
+COMMENT ON COLUMN friend_codes.user_id IS 'Optional reference to the user who submitted this friend code';
 
 -- Create indexes for performance
 CREATE INDEX idx_friend_codes_active ON friend_codes(is_active) WHERE is_active = true;
@@ -33,6 +35,7 @@ CREATE INDEX idx_friend_codes_created ON friend_codes(created_at DESC);
 CREATE INDEX idx_friend_codes_location ON friend_codes(location) WHERE location IS NOT NULL;
 CREATE INDEX idx_friend_codes_player_level ON friend_codes(player_level) WHERE player_level IS NOT NULL;
 CREATE INDEX idx_friend_codes_expires_at ON friend_codes(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX idx_friend_codes_user_id ON friend_codes(user_id) WHERE user_id IS NOT NULL;
 
 -- Create a composite index for common queries (active codes, newest first)
 CREATE INDEX idx_friend_codes_active_created ON friend_codes(is_active, created_at DESC) WHERE is_active = true;
