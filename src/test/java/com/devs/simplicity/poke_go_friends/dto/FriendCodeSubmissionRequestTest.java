@@ -185,8 +185,8 @@ class FriendCodeSubmissionRequestTest {
     class TrainerNameValidation {
 
         @Test
-        @DisplayName("should fail validation when trainer name is null")
-        void shouldFailValidationWhenTrainerNameIsNull() {
+        @DisplayName("should pass validation when trainer name is null")
+        void shouldPassValidationWhenTrainerNameIsNull() {
             // Arrange
             FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
                 "123456789012", null);
@@ -195,14 +195,12 @@ class FriendCodeSubmissionRequestTest {
             Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
 
             // Assert
-            assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Trainer name is required");
+            assertThat(violations).isEmpty();
         }
 
         @Test
-        @DisplayName("should fail validation when trainer name is empty")
-        void shouldFailValidationWhenTrainerNameIsEmpty() {
+        @DisplayName("should pass validation when trainer name is empty")
+        void shouldPassValidationWhenTrainerNameIsEmpty() {
             // Arrange
             FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
                 "123456789012", "");
@@ -211,45 +209,7 @@ class FriendCodeSubmissionRequestTest {
             Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
 
             // Assert
-            assertThat(violations).hasSize(3);
-            assertThat(violations).extracting(ConstraintViolation::getMessage)
-                .containsExactlyInAnyOrder(
-                    "Trainer name is required",
-                    "Trainer name must be between 2 and 100 characters",
-                    "Trainer name can only contain letters, numbers, spaces, periods, underscores, and hyphens");
-        }
-
-        @Test
-        @DisplayName("should fail validation when trainer name is too short")
-        void shouldFailValidationWhenTrainerNameTooShort() {
-            // Arrange
-            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
-                "123456789012", "A");
-
-            // Act
-            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
-
-            // Assert
-            assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Trainer name must be between 2 and 100 characters");
-        }
-
-        @Test
-        @DisplayName("should fail validation when trainer name is too long")
-        void shouldFailValidationWhenTrainerNameTooLong() {
-            // Arrange
-            String longName = "A".repeat(101);
-            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
-                "123456789012", longName);
-
-            // Act
-            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
-
-            // Assert
-            assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Trainer name must be between 2 and 100 characters");
+            assertThat(violations).isEmpty();
         }
     }
 

@@ -84,14 +84,14 @@ public class ValidationService {
      */
     public void validateTrainerName(String trainerName) {
         log.debug("Validating trainer name: {}", trainerName);
-        
         if (!StringUtils.hasText(trainerName)) {
-            throw new ValidationException("Trainer name cannot be empty");
+            // Optional field: accept null or empty
+            return;
         }
 
         // Sanitize the trainer name
         String sanitized = sanitizationService.sanitizeTrainerName(trainerName);
-        
+
         // Check if sanitization removed too much content
         if (!sanitizationService.isValidAfterSanitization(trainerName, sanitized)) {
             throw new ValidationException("Trainer name contains too many invalid characters");

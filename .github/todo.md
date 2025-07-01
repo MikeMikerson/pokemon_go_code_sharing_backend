@@ -19,11 +19,11 @@ Based on analysis of the frontend (`simple_pokemon_go_code_sharing`) and backend
 - [ ] **Create database migration** - Add team and goals columns to friend_codes table
 
 ## Validation Alignment
-- [ ] **Sync friend code validation** - Frontend expects exactly 12 digits, backend has same validation ✅
-- [ ] **Sync trainer level validation** - Frontend expects 1-50, backend has same validation ✅
-- [ ] **Add team validation** - Backend needs to validate team enum values
-- [ ] **Add goals validation** - Backend needs to validate goals array values
-- [ ] **Update trainer name validation** - Frontend allows optional trainer name, backend requires it
+ - [x] **Sync friend code validation** - Frontend expects exactly 12 digits, backend has same validation ✅
+ - [x] **Sync trainer level validation** - Frontend expects 1-50, backend has same validation ✅
+ - [x] **Add team validation** - Backend needs to validate team enum values (currently, invalid values cause deserialization errors, not user-friendly validation)
+ - [x] **Add goals validation** - Backend needs to validate goals array values (currently, invalid values cause deserialization errors, not user-friendly validation)
+ - [x] **Update trainer name validation** - Frontend allows optional trainer name, backend requires it (now optional in backend, matches frontend) ✅
 
 ## Response Format Adjustments
 - [ ] **Update error response format** - Ensure ValidationError responses include fieldErrors map

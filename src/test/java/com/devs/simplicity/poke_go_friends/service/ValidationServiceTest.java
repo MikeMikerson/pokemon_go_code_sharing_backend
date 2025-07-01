@@ -136,19 +136,15 @@ class ValidationServiceTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"", " ", "   "})
-        @DisplayName("Should reject empty or whitespace trainer names")
-        void shouldRejectEmptyTrainerNames(String emptyName) {
-            assertThatThrownBy(() -> validationService.validateTrainerName(emptyName))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("Trainer name cannot be empty");
+        @DisplayName("Should accept empty or whitespace trainer names (optional field)")
+        void shouldAcceptEmptyTrainerNames(String emptyName) {
+            assertThatNoException().isThrownBy(() -> validationService.validateTrainerName(emptyName));
         }
 
         @Test
-        @DisplayName("Should reject null trainer name")
-        void shouldRejectNullTrainerName() {
-            assertThatThrownBy(() -> validationService.validateTrainerName(null))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("Trainer name cannot be empty");
+        @DisplayName("Should accept null trainer name (optional field)")
+        void shouldAcceptNullTrainerName() {
+            assertThatNoException().isThrownBy(() -> validationService.validateTrainerName(null));
         }
 
         @ParameterizedTest

@@ -1,11 +1,14 @@
 package com.devs.simplicity.poke_go_friends.dto;
 
+import com.devs.simplicity.poke_go_friends.entity.Goal;
+import com.devs.simplicity.poke_go_friends.entity.Team;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * DTO for friend code response data.
@@ -23,18 +26,30 @@ public class FriendCodeResponse {
     private Integer playerLevel;
     private String location;
     private String description;
+    private Team team;
+    private Set<Goal> goals;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime expiresAt;
 
+
     /**
-     * Constructor for basic friend code info.
+     * Constructor for backwards compatibility.
      */
-    public FriendCodeResponse(Long id, String friendCode, String trainerName) {
+    public FriendCodeResponse(Long id, String friendCode, String trainerName, Integer playerLevel,
+                            String location, String description, Boolean isActive, 
+                            LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime expiresAt) {
         this.id = id;
         this.friendCode = friendCode;
         this.trainerName = trainerName;
+        this.playerLevel = playerLevel;
+        this.location = location;
+        this.description = description;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.expiresAt = expiresAt;
     }
 
     /**
@@ -49,6 +64,8 @@ public class FriendCodeResponse {
             entity.getPlayerLevel(),
             entity.getLocation(),
             entity.getDescription(),
+            entity.getTeam(),
+            entity.getGoals(),
             entity.getIsActive(),
             entity.getCreatedAt(),
             entity.getUpdatedAt(),

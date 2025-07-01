@@ -81,7 +81,7 @@ class FriendCodeServiceTest {
 
             // When
             FriendCode result = friendCodeService.createFriendCode(
-                friendCode, trainerName, 25, "New York", "Looking for friends", ipAddress, userId);
+                friendCode, trainerName, 25, "New York", "Looking for friends", null, null, ipAddress, userId);
 
             // Then
             assertThat(result).isNotNull();
@@ -107,7 +107,7 @@ class FriendCodeServiceTest {
 
             // When
             FriendCode result = friendCodeService.createFriendCode(
-                friendCode, trainerName, null, null, null, ipAddress, null);
+                friendCode, trainerName, null, null, null, null, null, ipAddress, null);
 
             // Then
             assertThat(result).isNotNull();
@@ -129,7 +129,7 @@ class FriendCodeServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> friendCodeService.createFriendCode(
-                friendCode, trainerName, null, null, null, ipAddress, null))
+                friendCode, trainerName, null, null, null, null, null, ipAddress, null))
                 .isInstanceOf(DuplicateFriendCodeException.class);
 
             verify(friendCodeRepository, never()).save(any());
@@ -148,7 +148,7 @@ class FriendCodeServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> friendCodeService.createFriendCode(
-                friendCode, trainerName, null, null, null, ipAddress, userId))
+                friendCode, trainerName, null, null, null, null, null, ipAddress, userId))
                 .isInstanceOf(FriendCodeNotFoundException.class)
                 .hasMessageContaining("User not found");
 
@@ -169,7 +169,7 @@ class FriendCodeServiceTest {
 
             // When
             FriendCode result = friendCodeService.createFriendCodeWithExpiration(
-                friendCode, trainerName, null, null, null, ipAddress, null, expirationDays);
+                friendCode, trainerName, null, null, null, null, null, ipAddress, null, expirationDays);
 
             // Then
             assertThat(result).isNotNull();
@@ -434,7 +434,7 @@ class FriendCodeServiceTest {
 
             // When
             FriendCode result = friendCodeService.updateFriendCode(
-                id, newTrainerName, 30, "Updated Location", "Updated description", userId);
+                id, newTrainerName, 30, "Updated Location", "Updated description", null, null, userId);
 
             // Then
             assertThat(result).isNotNull();
@@ -456,7 +456,7 @@ class FriendCodeServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> friendCodeService.updateFriendCode(
-                id, "NewName", null, null, null, userId))
+                id, "NewName", null, null, null, null, null, userId))
                 .isInstanceOf(FriendCodeNotFoundException.class)
                 .hasMessageContaining("access denied");
 

@@ -24,7 +24,7 @@ class FriendCodeResponseTest {
         @DisplayName("should create response with basic constructor")
         void shouldCreateResponseWithBasicConstructor() {
             // Arrange & Act
-            FriendCodeResponse response = new FriendCodeResponse(1L, "123456789012", "TestTrainer");
+            FriendCodeResponse response = new FriendCodeResponse(1L, "123456789012", "TestTrainer", null, null, null, null, null, null, null, null, null);
 
             // Assert
             assertThat(response.getId()).isEqualTo(1L);

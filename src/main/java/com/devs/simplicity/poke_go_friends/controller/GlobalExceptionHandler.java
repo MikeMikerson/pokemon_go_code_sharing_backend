@@ -158,16 +158,48 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJson(
             HttpMessageNotReadableException ex, WebRequest request) {
-        
         log.warn("Malformed JSON request: {}", ex.getMessage());
-        
+
+        // Check for enum deserialization errors (invalid team/goals values)
+        Throwable cause = ex.getCause();
+        if (cause != null && cause.getMessage() != null && cause.getMessage().contains("not one of the values accepted for Enum class")) {
+            // Try to extract field and allowed values from the message
+            String message = cause.getMessage();
+            String field = null;
+            String allowed = null;
+            // Example: Cannot deserialize value of type `com.devs.simplicity.poke_go_friends.entity.Team` from String "INVALID_TEAM": not one of the values accepted for Enum class: [INSTINCT, MYSTIC, VALOR]
+            int typeIdx = message.indexOf("type `");
+            int fromIdx = message.indexOf(" from String ");
+            if (typeIdx != -1 && fromIdx != -1) {
+                String typeName = message.substring(typeIdx + 6, fromIdx).replace("`", "").trim();
+                if (typeName.endsWith("Team")) field = "team";
+                if (typeName.endsWith("Goal")) field = "goals";
+            }
+            int allowedIdx = message.indexOf("accepted for Enum class: [");
+            if (allowedIdx != -1) {
+                allowed = message.substring(allowedIdx + 26);
+                int end = allowed.indexOf("]");
+                if (end != -1) allowed = allowed.substring(0, end);
+            }
+            String details = (field != null && allowed != null)
+                ? String.format("%s: Invalid value. Allowed values: [%s]", field, allowed)
+                : "Invalid enum value in request body";
+            ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation Error",
+                "Validation failed",
+                details,
+                request.getDescription(false).replace("uri=", "")
+            );
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.BAD_REQUEST.value(),
             "Malformed Request",
             "Invalid JSON format in request body",
             request.getDescription(false).replace("uri=", "")
         );
-        
         return ResponseEntity.badRequest().body(errorResponse);
     }
 

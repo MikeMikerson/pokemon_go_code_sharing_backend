@@ -1,9 +1,15 @@
 package com.devs.simplicity.poke_go_friends.dto;
 
+import com.devs.simplicity.poke_go_friends.entity.Goal;
+import com.devs.simplicity.poke_go_friends.entity.Team;
+import com.devs.simplicity.poke_go_friends.validation.ValidTeam;
+import com.devs.simplicity.poke_go_friends.validation.ValidGoals;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
+import java.util.Set;
 
 /**
  * DTO for friend code submission requests.
@@ -19,10 +25,6 @@ public class FriendCodeSubmissionRequest {
              message = "Friend code must be exactly 12 digits (spaces and dashes will be removed)")
     private String friendCode;
 
-    @NotBlank(message = "Trainer name is required")
-    @Size(min = 2, max = 100, message = "Trainer name must be between 2 and 100 characters")
-    @Pattern(regexp = "^[\\p{L}\\p{N}\\s._-]+$", 
-             message = "Trainer name can only contain letters, numbers, spaces, periods, underscores, and hyphens")
     private String trainerName;
 
     @Min(value = 1, message = "Player level must be at least 1")
@@ -35,11 +37,29 @@ public class FriendCodeSubmissionRequest {
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
 
+    @ValidTeam
+    private Team team;
+
+    @ValidGoals
+    private Set<Goal> goals;
+
     /**
      * Constructor for required fields only.
      */
     public FriendCodeSubmissionRequest(String friendCode, String trainerName) {
         this.friendCode = friendCode;
         this.trainerName = trainerName;
+    }
+
+    /**
+     * Constructor for backwards compatibility.
+     */
+    public FriendCodeSubmissionRequest(String friendCode, String trainerName, Integer playerLevel, 
+                                     String location, String description) {
+        this.friendCode = friendCode;
+        this.trainerName = trainerName;
+        this.playerLevel = playerLevel;
+        this.location = location;
+        this.description = description;
     }
 }

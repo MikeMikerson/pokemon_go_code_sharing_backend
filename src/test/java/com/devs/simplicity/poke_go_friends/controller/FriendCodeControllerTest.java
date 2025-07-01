@@ -74,7 +74,7 @@ class FriendCodeControllerTest {
         void shouldCreateFriendCodeSuccessfully() throws Exception {
             // Given
             when(friendCodeService.createFriendCode(anyString(), anyString(), anyInt(), 
-                    anyString(), anyString(), anyString(), any())).thenReturn(testFriendCode);
+                    anyString(), anyString(), isNull(), isNull(), anyString(), any())).thenReturn(testFriendCode);
 
             // When & Then
             mockMvc.perform(post("/api/friend-codes")
@@ -90,7 +90,47 @@ class FriendCodeControllerTest {
 
             verify(friendCodeService).createFriendCode(
                 eq("123456789012"), eq("TestTrainer"), eq(25), 
-                eq("New York"), eq("Looking for friends"), anyString(), isNull());
+                eq("New York"), eq("Looking for friends"), isNull(), isNull(), anyString(), isNull());
+        }
+
+        @Test
+        @DisplayName("Should return 400 and user-friendly error for invalid team value")
+        void shouldReturn400ForInvalidTeamValue() throws Exception {
+            // Given: invalid team value
+            String invalidTeamJson = "{" +
+                    "\"friendCode\": \"123456789012\"," +
+                    "\"trainerName\": \"TestTrainer\"," +
+                    "\"team\": \"INVALID_TEAM\"}";
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(invalidTeamJson))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.error").value("Validation Error"))
+                    .andExpect(jsonPath("$.message").value("Validation failed"))
+                    .andExpect(jsonPath("$.details").value(org.hamcrest.Matchers.containsString("team")));
+        }
+
+        @Test
+        @DisplayName("Should return 400 and user-friendly error for invalid goals value")
+        void shouldReturn400ForInvalidGoalsValue() throws Exception {
+            // Given: invalid goals value (not a valid enum)
+            String invalidGoalsJson = "{" +
+                    "\"friendCode\": \"123456789012\"," +
+                    "\"trainerName\": \"TestTrainer\"," +
+                    "\"goals\": [\"INVALID_GOAL\"]}";
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(invalidGoalsJson))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.error").value("Validation Error"))
+                    .andExpect(jsonPath("$.message").value("Validation failed"))
+                    .andExpect(jsonPath("$.details").value(org.hamcrest.Matchers.containsString("goals")));
         }
 
         @Test
@@ -98,7 +138,7 @@ class FriendCodeControllerTest {
         void shouldReturn409ForDuplicateFriendCode() throws Exception {
             // Given
             when(friendCodeService.createFriendCode(anyString(), anyString(), anyInt(), 
-                    anyString(), anyString(), anyString(), any()))
+                    anyString(), anyString(), isNull(), isNull(), anyString(), any()))
                     .thenThrow(new DuplicateFriendCodeException("123456789012"));
 
             // When & Then
@@ -187,7 +227,7 @@ class FriendCodeControllerTest {
             updatedFriendCode.setUpdatedAt(LocalDateTime.now());
             
             when(friendCodeService.updateFriendCode(anyLong(), anyString(), anyInt(), 
-                    anyString(), anyString(), any())).thenReturn(updatedFriendCode);
+                    anyString(), anyString(), isNull(), isNull(), any())).thenReturn(updatedFriendCode);
 
             // When & Then
             mockMvc.perform(put("/api/friend-codes/1")
@@ -201,7 +241,7 @@ class FriendCodeControllerTest {
                     .andExpect(jsonPath("$.description").value("Updated description"));
 
             verify(friendCodeService).updateFriendCode(
-                eq(1L), eq("UpdatedTrainer"), eq(30), eq("Los Angeles"), eq("Updated description"), isNull());
+                eq(1L), eq("UpdatedTrainer"), eq(30), eq("Los Angeles"), eq("Updated description"), isNull(), isNull(), any());
         }
     }
 

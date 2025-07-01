@@ -1,6 +1,8 @@
 package com.devs.simplicity.poke_go_friends.service;
 
 import com.devs.simplicity.poke_go_friends.entity.FriendCode;
+import com.devs.simplicity.poke_go_friends.entity.Goal;
+import com.devs.simplicity.poke_go_friends.entity.Team;
 import com.devs.simplicity.poke_go_friends.entity.User;
 import com.devs.simplicity.poke_go_friends.exception.DuplicateFriendCodeException;
 import com.devs.simplicity.poke_go_friends.exception.FriendCodeNotFoundException;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Service class for managing Pokemon Go friend codes.
@@ -41,13 +44,16 @@ public class FriendCodeService {
      * @param playerLevel  The player's level (optional)
      * @param location     The player's location (optional)
      * @param description  Description of what they're looking for (optional)
+     * @param team         The Pokemon Go team (optional)
+     * @param goals        The friendship goals (optional)
      * @param ipAddress    The submitter's IP address for rate limiting
      * @param userId       The submitter's user ID (optional for anonymous submissions)
      * @return The created FriendCode entity
      * @throws DuplicateFriendCodeException if the friend code already exists
      */
     public FriendCode createFriendCode(String friendCode, String trainerName, Integer playerLevel,
-                                      String location, String description, String ipAddress, Long userId) {
+                                      String location, String description, Team team, Set<Goal> goals,
+                                      String ipAddress, Long userId) {
         log.info("Creating friend code: {} for trainer: {}", friendCode, trainerName);
 
         // Validate all input data and check rate limits
@@ -65,7 +71,7 @@ public class FriendCodeService {
         }
 
         // Create and save the friend code
-        FriendCode newFriendCode = new FriendCode(friendCode, trainerName, playerLevel, location, description);
+        FriendCode newFriendCode = new FriendCode(friendCode, trainerName, playerLevel, location, description, team, goals);
         newFriendCode.setUser(user);
 
         FriendCode savedFriendCode = friendCodeRepository.save(newFriendCode);
@@ -75,6 +81,7 @@ public class FriendCodeService {
         
         return savedFriendCode;
     }
+
 
     /**
      * Creates a friend code with automatic expiration.
@@ -90,13 +97,11 @@ public class FriendCodeService {
      * @return The created FriendCode entity
      */
     public FriendCode createFriendCodeWithExpiration(String friendCode, String trainerName, Integer playerLevel,
-                                                    String location, String description, String ipAddress, 
-                                                    Long userId, int expirationDays) {
-        FriendCode newFriendCode = createFriendCode(friendCode, trainerName, playerLevel, 
-                                                   location, description, ipAddress, userId);
-        
+                                                    String location, String description, Team team, Set<Goal> goals,
+                                                    String ipAddress, Long userId, int expirationDays) {
+        FriendCode newFriendCode = createFriendCode(friendCode, trainerName, playerLevel,
+                                                   location, description, team, goals, ipAddress, userId);
         newFriendCode.setExpiration(LocalDateTime.now().plus(expirationDays, ChronoUnit.DAYS));
-        
         return friendCodeRepository.save(newFriendCode);
     }
 
@@ -314,12 +319,14 @@ public class FriendCodeService {
      * @param playerLevel New player level (optional)
      * @param location    New location (optional)
      * @param description New description (optional)
+     * @param team        New team (optional)
+     * @param goals       New goals (optional)
      * @param userId      The user making the update (must be the owner)
      * @return The updated FriendCode entity
      * @throws FriendCodeNotFoundException if the friend code is not found
      */
     public FriendCode updateFriendCode(Long id, String trainerName, Integer playerLevel,
-                                      String location, String description, Long userId) {
+                                      String location, String description, Team team, Set<Goal> goals, Long userId) {
         log.info("Updating friend code: {} by user: {}", id, userId);
         
         FriendCode friendCode = getFriendCodeById(id);
@@ -330,7 +337,7 @@ public class FriendCodeService {
             throw new FriendCodeNotFoundException("Friend code not found or access denied");
         }
         
-        // Validate new values if provided
+        // Validate and update new values if provided
         if (StringUtils.hasText(trainerName)) {
             validationService.validateTrainerName(trainerName);
             friendCode.setTrainerName(trainerName);
@@ -351,11 +358,20 @@ public class FriendCodeService {
             friendCode.setDescription(description);
         }
         
+        if (team != null) {
+            friendCode.setTeam(team);
+        }
+        
+        if (goals != null) {
+            friendCode.setGoals(goals);
+        }
+        
         FriendCode updatedFriendCode = friendCodeRepository.save(friendCode);
         
         log.info("Successfully updated friend code: {}", id);
         return updatedFriendCode;
     }
+
 
     /**
      * Marks a friend code as inactive (soft delete).

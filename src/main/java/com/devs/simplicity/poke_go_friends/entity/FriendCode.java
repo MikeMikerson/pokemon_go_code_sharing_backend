@@ -9,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Entity representing a Pokemon Go friend code submission.
@@ -35,9 +37,7 @@ public class FriendCode {
     @Pattern(regexp = "\\d{12}", message = "Friend code must be exactly 12 digits")
     private String friendCode;
 
-    @Column(name = "trainer_name", nullable = false, length = 100)
-    @NotBlank(message = "Trainer name is required")
-    @Size(min = 2, max = 100, message = "Trainer name must be between 2 and 100 characters")
+    @Column(name = "trainer_name", nullable = true, length = 100)
     private String trainerName;
 
     @Column(name = "player_level")
@@ -52,6 +52,16 @@ public class FriendCode {
     @Column(name = "description", columnDefinition = "TEXT")
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "team", length = 20)
+    private Team team;
+
+    @ElementCollection(targetClass = Goal.class, fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "friend_code_goals", joinColumns = @JoinColumn(name = "friend_code_id"))
+    @Column(name = "goal")
+    private Set<Goal> goals = new HashSet<>();
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
@@ -102,6 +112,24 @@ public class FriendCode {
     }
 
     /**
+     * Constructor for creating a friend code with all fields including team and goals.
+     *
+     * @param friendCode   The 12-digit Pokemon Go friend code
+     * @param trainerName  The Pokemon Go trainer name
+     * @param playerLevel  The player's level (optional)
+     * @param location     The player's location (optional)
+     * @param description  Description of what they're looking for (optional)
+     * @param team         The Pokemon Go team (optional)
+     * @param goals        The friendship goals (optional)
+     */
+    public FriendCode(String friendCode, String trainerName, Integer playerLevel, 
+                     String location, String description, Team team, Set<Goal> goals) {
+        this(friendCode, trainerName, playerLevel, location, description);
+        this.team = team;
+        this.goals = goals != null ? new HashSet<>(goals) : new HashSet<>();
+    }
+
+    /**
      * Checks if the friend code is currently active and not expired.
      *
      * @return true if active and not expired, false otherwise
@@ -132,5 +160,37 @@ public class FriendCode {
      */
     public void setExpiration(LocalDateTime expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    /**
+     * Adds a goal to the friend code.
+     *
+     * @param goal The goal to add
+     */
+    public void addGoal(Goal goal) {
+        if (this.goals == null) {
+            this.goals = new HashSet<>();
+        }
+        this.goals.add(goal);
+    }
+
+    /**
+     * Removes a goal from the friend code.
+     *
+     * @param goal The goal to remove
+     */
+    public void removeGoal(Goal goal) {
+        if (this.goals != null) {
+            this.goals.remove(goal);
+        }
+    }
+
+    /**
+     * Sets the goals for the friend code.
+     *
+     * @param goals The set of goals
+     */
+    public void setGoals(Set<Goal> goals) {
+        this.goals = goals != null ? new HashSet<>(goals) : new HashSet<>();
     }
 }

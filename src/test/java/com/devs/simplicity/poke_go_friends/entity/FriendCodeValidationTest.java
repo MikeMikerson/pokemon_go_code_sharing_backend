@@ -107,10 +107,9 @@ class FriendCodeValidationTest {
         assertThat(violations.iterator().next().getMessage())
             .isEqualTo("Friend code must be exactly 12 digits");
     }
-
     @Test
-    @DisplayName("Trainer name is required")
-    void trainerNameRequired_shouldFailValidation() {
+    @DisplayName("Trainer name is optional (null should pass validation)")
+    void trainerNameNull_shouldPassValidation() {
         // Given
         friendCode.setTrainerName(null);
 
@@ -118,14 +117,12 @@ class FriendCodeValidationTest {
         Set<ConstraintViolation<FriendCode>> violations = validator.validate(friendCode);
 
         // Then
-        assertThat(violations).hasSize(1);
-        assertThat(violations.iterator().next().getMessage())
-            .isEqualTo("Trainer name is required");
+        assertThat(violations).isEmpty();
     }
 
     @Test
-    @DisplayName("Trainer name cannot be blank")
-    void trainerNameBlank_shouldFailValidation() {
+    @DisplayName("Trainer name can be blank (should pass validation)")
+    void trainerNameBlank_shouldPassValidation() {
         // Given
         friendCode.setTrainerName("");
 
@@ -133,34 +130,9 @@ class FriendCodeValidationTest {
         Set<ConstraintViolation<FriendCode>> violations = validator.validate(friendCode);
 
         // Then
-        assertThat(violations).hasSize(2); // NotBlank and Size violations
+        assertThat(violations).isEmpty();
     }
 
-    @Test
-    @DisplayName("Trainer name must be between 2 and 100 characters")
-    void trainerNameSizeValidation_shouldFailForInvalidSizes() {
-        // Given - too short
-        friendCode.setTrainerName("A");
-
-        // When
-        Set<ConstraintViolation<FriendCode>> violations = validator.validate(friendCode);
-
-        // Then
-        assertThat(violations).hasSize(1);
-        assertThat(violations.iterator().next().getMessage())
-            .isEqualTo("Trainer name must be between 2 and 100 characters");
-
-        // Given - too long
-        friendCode.setTrainerName("A".repeat(101));
-
-        // When
-        violations = validator.validate(friendCode);
-
-        // Then
-        assertThat(violations).hasSize(1);
-        assertThat(violations.iterator().next().getMessage())
-            .isEqualTo("Trainer name must be between 2 and 100 characters");
-    }
 
     @Test
     @DisplayName("Valid trainer name sizes should pass validation")

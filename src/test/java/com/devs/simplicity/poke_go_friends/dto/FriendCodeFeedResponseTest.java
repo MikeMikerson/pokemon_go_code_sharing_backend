@@ -32,8 +32,8 @@ class FriendCodeFeedResponseTest {
         void shouldCreateResponseWithAllArgsConstructor() {
             // Arrange
             List<FriendCodeResponse> content = Arrays.asList(
-                new FriendCodeResponse(1L, "123456789012", "Trainer1"),
-                new FriendCodeResponse(2L, "234567890123", "Trainer2")
+                new FriendCodeResponse(1L, "123456789012", "Trainer1", null, null, null, null, null, null, null, null, null),
+                new FriendCodeResponse(2L, "234567890123", "Trainer2", null, null, null, null, null, null, null, null, null)
             );
 
             // Act
@@ -56,7 +56,7 @@ class FriendCodeFeedResponseTest {
         void shouldCreateResponseWithSimpleConstructor() {
             // Arrange
             List<FriendCodeResponse> content = Arrays.asList(
-                new FriendCodeResponse(1L, "123456789012", "Trainer1")
+                new FriendCodeResponse(1L, "123456789012", "Trainer1", null, null, null, null, null, null, null, null, null)
             );
 
             // Act

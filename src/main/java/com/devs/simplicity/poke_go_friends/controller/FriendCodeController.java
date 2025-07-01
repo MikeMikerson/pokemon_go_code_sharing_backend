@@ -51,6 +51,8 @@ public class FriendCodeController {
             request.getPlayerLevel(),
             request.getLocation(),
             request.getDescription(),
+            request.getTeam(),
+            request.getGoals(),
             ipAddress,
             userId
         );
@@ -142,6 +144,8 @@ public class FriendCodeController {
             request.getPlayerLevel(),
             request.getLocation(),
             request.getDescription(),
+            request.getTeam(),
+            request.getGoals(),
             userId
         );
         
