@@ -4,7 +4,8 @@ FROM amazoncorretto:21-alpine-jdk AS build
 # Set working directory
 WORKDIR /app
 
-# Copy Gradle wrapper and build files
+
+# Copy Gradle wrapper and build files first (to leverage cache for dependencies)
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
@@ -13,11 +14,14 @@ COPY settings.gradle .
 # Make gradlew executable
 RUN chmod +x ./gradlew
 
-# Copy source code
+# Only resolve dependencies (this step is cached unless build files change)
+RUN ./gradlew dependencies --no-daemon || true
+
+# Copy source code last (this invalidates cache only for code changes)
 COPY src src
 
 # Build the application
-RUN ./gradlew build -x test
+RUN ./gradlew build -x test --no-daemon
 
 # Create the runtime image
 FROM amazoncorretto:21-alpine-jdk

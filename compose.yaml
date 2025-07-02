@@ -25,6 +25,6 @@ volumes:
   db-data:
 secrets:
   db-password:
-    file: db/pw.txt
+    file: .env/db.txt
 networks:
   spring-postgres:

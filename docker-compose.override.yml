@@ -1,0 +1,13 @@
+services:
+  backend:
+    volumes:
+      - ./src:/app/src
+      - ./build.gradle:/app/build.gradle
+      - ./settings.gradle:/app/settings.gradle
+      - ./gradle:/app/gradle
+      - ./gradlew:/app/gradlew
+    command: ./gradlew bootRun
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
