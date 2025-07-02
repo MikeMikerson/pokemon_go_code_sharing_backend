@@ -1,5 +1,8 @@
 package com.devs.simplicity.poke_go_friends.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Enum representing Pokemon Go teams.
  * Based on the three teams available in Pokemon Go.
@@ -27,6 +30,7 @@ public enum Team {
      * @return The corresponding Team enum
      * @throws IllegalArgumentException if value is not valid
      */
+    @JsonCreator
     public static Team fromValue(String value) {
         if (value == null) {
             return null;
@@ -42,6 +46,7 @@ public enum Team {
             ". Valid values are: mystic, valor, instinct");
     }
 
+    @JsonValue
     @Override
     public String toString() {
         return value;

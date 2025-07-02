@@ -1,5 +1,8 @@
 package com.devs.simplicity.poke_go_friends.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Enum representing Pokemon Go friendship goals.
  * Based on the activities players want to participate in.
@@ -28,6 +31,7 @@ public enum Goal {
      * @return The corresponding Goal enum
      * @throws IllegalArgumentException if value is not valid
      */
+    @JsonCreator
     public static Goal fromValue(String value) {
         if (value == null) {
             return null;
@@ -43,6 +47,7 @@ public enum Goal {
             ". Valid values are: gifts, exp, raids, all");
     }
 
+    @JsonValue
     @Override
     public String toString() {
         return value;

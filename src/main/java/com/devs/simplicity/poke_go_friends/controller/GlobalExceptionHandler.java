@@ -162,36 +162,107 @@ public class GlobalExceptionHandler {
 
         // Check for enum deserialization errors (invalid team/goals values)
         Throwable cause = ex.getCause();
-        if (cause != null && cause.getMessage() != null && cause.getMessage().contains("not one of the values accepted for Enum class")) {
-            // Try to extract field and allowed values from the message
+        
+        // Navigate through the exception chain to find our IllegalArgumentException
+        while (cause != null) {
             String message = cause.getMessage();
-            String field = null;
-            String allowed = null;
-            // Example: Cannot deserialize value of type `com.devs.simplicity.poke_go_friends.entity.Team` from String "INVALID_TEAM": not one of the values accepted for Enum class: [INSTINCT, MYSTIC, VALOR]
-            int typeIdx = message.indexOf("type `");
-            int fromIdx = message.indexOf(" from String ");
-            if (typeIdx != -1 && fromIdx != -1) {
-                String typeName = message.substring(typeIdx + 6, fromIdx).replace("`", "").trim();
-                if (typeName.endsWith("Team")) field = "team";
-                if (typeName.endsWith("Goal")) field = "goals";
+            
+            // Handle our custom IllegalArgumentException from enum fromValue methods
+            if (cause instanceof IllegalArgumentException && message != null) {
+                // Example message: "Invalid team value: INVALID_TEAM. Valid values are: mystic, valor, instinct"
+                // or "Invalid goal value: INVALID_GOAL. Valid values are: gifts, exp, raids, all"
+                if (message.contains("Invalid team value:")) {
+                    String details = "team: " + message;
+                    ErrorResponse errorResponse = new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Validation Error",
+                        "Validation failed",
+                        details,
+                        request.getDescription(false).replace("uri=", "")
+                    );
+                    return ResponseEntity.badRequest().body(errorResponse);
+                } else if (message.contains("Invalid goal value:")) {
+                    String details = "goals: " + message;
+                    ErrorResponse errorResponse = new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Validation Error",
+                        "Validation failed",
+                        details,
+                        request.getDescription(false).replace("uri=", "")
+                    );
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
             }
-            int allowedIdx = message.indexOf("accepted for Enum class: [");
-            if (allowedIdx != -1) {
-                allowed = message.substring(allowedIdx + 26);
-                int end = allowed.indexOf("]");
-                if (end != -1) allowed = allowed.substring(0, end);
+            
+            // Check Jackson's exception messages that may contain our custom message  
+            if (message != null && message.contains("problem: Invalid team value:")) {
+                // Extract our custom message from Jackson's wrapper
+                int problemIdx = message.indexOf("problem: ");
+                if (problemIdx != -1) {
+                    String customMessage = message.substring(problemIdx + 9); // Skip "problem: "
+                    String details = "team: " + customMessage;
+                    ErrorResponse errorResponse = new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Validation Error",
+                        "Validation failed",
+                        details,
+                        request.getDescription(false).replace("uri=", "")
+                    );
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
             }
-            String details = (field != null && allowed != null)
-                ? String.format("%s: Invalid value. Allowed values: [%s]", field, allowed)
-                : "Invalid enum value in request body";
-            ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "Validation Error",
-                "Validation failed",
-                details,
-                request.getDescription(false).replace("uri=", "")
-            );
-            return ResponseEntity.badRequest().body(errorResponse);
+            
+            if (message != null && message.contains("problem: Invalid goal value:")) {
+                // Extract our custom message from Jackson's wrapper
+                int problemIdx = message.indexOf("problem: ");
+                if (problemIdx != -1) {
+                    String customMessage = message.substring(problemIdx + 9); // Skip "problem: "
+                    String details = "goals: " + customMessage;
+                    ErrorResponse errorResponse = new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Validation Error",
+                        "Validation failed",
+                        details,
+                        request.getDescription(false).replace("uri=", "")
+                    );
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
+            }
+            
+            // Handle original Jackson enum deserialization errors (fallback)
+            if (message != null && message.contains("not one of the values accepted for Enum class")) {
+                // Try to extract field and allowed values from the message
+                String field = null;
+                String allowed = null;
+                // Example: Cannot deserialize value of type `com.devs.simplicity.poke_go_friends.entity.Team` from String "INVALID_TEAM": not one of the values accepted for Enum class: [INSTINCT, MYSTIC, VALOR]
+                int typeIdx = message.indexOf("type `");
+                int fromIdx = message.indexOf(" from String ");
+                if (typeIdx != -1 && fromIdx != -1) {
+                    String typeName = message.substring(typeIdx + 6, fromIdx).replace("`", "").trim();
+                    if (typeName.endsWith("Team")) field = "team";
+                    if (typeName.endsWith("Goal")) field = "goals";
+                }
+                int allowedIdx = message.indexOf("accepted for Enum class: [");
+                if (allowedIdx != -1) {
+                    allowed = message.substring(allowedIdx + 26);
+                    int end = allowed.indexOf("]");
+                    if (end != -1) allowed = allowed.substring(0, end);
+                }
+                String details = (field != null && allowed != null)
+                    ? String.format("%s: Invalid value. Allowed values: [%s]", field, allowed)
+                    : "Invalid enum value in request body";
+                ErrorResponse errorResponse = new ErrorResponse(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Validation Error",
+                    "Validation failed",
+                    details,
+                    request.getDescription(false).replace("uri=", "")
+                );
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            // Move to the next cause in the chain
+            cause = cause.getCause();
         }
 
         ErrorResponse errorResponse = new ErrorResponse(
