@@ -2,6 +2,7 @@ package com.devs.simplicity.poke_go_friends.dto;
 
 import com.devs.simplicity.poke_go_friends.entity.Goal;
 import com.devs.simplicity.poke_go_friends.entity.Team;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -18,19 +19,43 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "Response object containing friend code information")
 public class FriendCodeResponse {
 
+    @Schema(description = "Unique identifier for the friend code", example = "123")
     private Long id;
+    
+    @Schema(description = "Pokemon Go friend code", example = "123456789012")
     private String friendCode;
+    
+    @Schema(description = "Pokemon Go trainer name", example = "PikachuMaster99")
     private String trainerName;
+    
+    @Schema(description = "Current player level", example = "35", minimum = "1", maximum = "50")
     private Integer playerLevel;
+    
+    @Schema(description = "Geographic location", example = "New York, NY")
     private String location;
+    
+    @Schema(description = "Description about the trainer", example = "Looking for daily gift exchanges!")
     private String description;
+    
+    @Schema(description = "Pokemon Go team", example = "MYSTIC")
     private Team team;
+    
+    @Schema(description = "Set of goals the trainer is interested in")
     private Set<Goal> goals;
+    
+    @Schema(description = "Whether the friend code is active", example = "true")
     private Boolean isActive;
+    
+    @Schema(description = "When the friend code was created", example = "2025-07-03T04:16:18.278")
     private LocalDateTime createdAt;
+    
+    @Schema(description = "When the friend code was last updated", example = "2025-07-03T04:16:18.278")
     private LocalDateTime updatedAt;
+    
+    @Schema(description = "When the friend code expires (optional)", example = "2025-08-03T04:16:18.278")
     private LocalDateTime expiresAt;
 
 

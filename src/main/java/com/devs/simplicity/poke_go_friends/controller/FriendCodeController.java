@@ -3,6 +3,13 @@ package com.devs.simplicity.poke_go_friends.controller;
 import com.devs.simplicity.poke_go_friends.dto.*;
 import com.devs.simplicity.poke_go_friends.entity.FriendCode;
 import com.devs.simplicity.poke_go_friends.service.FriendCodeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/friend-codes")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Friend Codes", description = "Pokemon Go friend code management operations")
 public class FriendCodeController {
 
     private final FriendCodeService friendCodeService;
@@ -33,6 +41,45 @@ public class FriendCodeController {
      * POST /api/friend-codes
      */
     @PostMapping
+    @Operation(
+        summary = "Submit a new friend code",
+        description = "Creates a new friend code submission with trainer information. " +
+                     "This allows Pokemon Go trainers to share their friend codes with the community."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Friend code successfully created",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = FriendCodeResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Friend code already exists",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "429",
+            description = "Rate limit exceeded",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
     public ResponseEntity<FriendCodeResponse> submitFriendCode(
             @Valid @RequestBody FriendCodeSubmissionRequest request,
             HttpServletRequest httpRequest) {
@@ -68,14 +115,45 @@ public class FriendCodeController {
      * GET /api/friend-codes
      */
     @GetMapping
+    @Operation(
+        summary = "Get friend codes with pagination and filters",
+        description = "Retrieves a paginated list of active friend codes. " +
+                     "Supports filtering by location, level range, and search terms."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved friend codes",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = FriendCodeFeedResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid query parameters",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
     public ResponseEntity<FriendCodeFeedResponse> getFriendCodes(
+            @Parameter(description = "Page number (0-based)", example = "0")
             @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size (max 100)", example = "20")
             @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field", example = "createdAt")
             @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction", example = "desc")
             @RequestParam(defaultValue = "desc") String sortDir,
+            @Parameter(description = "Filter by location", example = "New York")
             @RequestParam(required = false) String location,
+            @Parameter(description = "Minimum player level", example = "1")
             @RequestParam(required = false) Integer minLevel,
+            @Parameter(description = "Maximum player level", example = "50")
             @RequestParam(required = false) Integer maxLevel,
+            @Parameter(description = "Search term for trainer name or description", example = "casual")
             @RequestParam(required = false) String search) {
         
         log.debug("Fetching friend codes - page: {}, size: {}, location: {}, levels: {}-{}, search: {}", 
@@ -109,7 +187,31 @@ public class FriendCodeController {
      * GET /api/friend-codes/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<FriendCodeResponse> getFriendCode(@PathVariable Long id) {
+    @Operation(
+        summary = "Get friend code by ID",
+        description = "Retrieves a specific friend code by its unique identifier."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Friend code found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = FriendCodeResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Friend code not found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    public ResponseEntity<FriendCodeResponse> getFriendCode(
+            @Parameter(description = "Friend code ID", example = "123")
+            @PathVariable Long id) {
         log.debug("Fetching friend code with ID: {}", id);
         
         FriendCode friendCode = friendCodeService.getFriendCodeById(id);

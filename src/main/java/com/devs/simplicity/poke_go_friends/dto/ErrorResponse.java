@@ -1,5 +1,6 @@
 package com.devs.simplicity.poke_go_friends.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -15,13 +16,25 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "Standard error response format")
 public class ErrorResponse {
 
+    @Schema(description = "HTTP status code", example = "400")
     private int status;
+    
+    @Schema(description = "Error type", example = "Bad Request")
     private String error;
+    
+    @Schema(description = "Error message", example = "Friend code is required")
     private String message;
+    
+    @Schema(description = "Additional error details", example = "The friendCode field cannot be null or empty")
     private String details;
+    
+    @Schema(description = "Timestamp when the error occurred", example = "2025-07-03T04:16:18.278")
     private LocalDateTime timestamp;
+    
+    @Schema(description = "API path where the error occurred", example = "/api/friend-codes")
     private String path;
 
     /**

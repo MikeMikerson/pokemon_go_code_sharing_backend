@@ -1,5 +1,11 @@
 package com.devs.simplicity.poke_go_friends.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
@@ -22,6 +28,7 @@ import java.util.Map;
 @RequestMapping("/api/health")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Health", description = "Application health monitoring endpoints")
 public class HealthController implements HealthIndicator {
 
     private final DataSource dataSource;
@@ -31,6 +38,22 @@ public class HealthController implements HealthIndicator {
      * GET /api/health
      */
     @GetMapping
+    @Operation(
+        summary = "Application health check",
+        description = "Returns the overall health status of the application including database connectivity."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Application is healthy",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "503",
+            description = "Application is unhealthy",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     public ResponseEntity<Map<String, Object>> getHealth() {
         log.debug("Health check requested");
         
