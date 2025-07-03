@@ -4,7 +4,7 @@
 CREATE TABLE friend_codes (
     id BIGSERIAL PRIMARY KEY,
     friend_code VARCHAR(12) NOT NULL UNIQUE,
-    trainer_name VARCHAR(100) NOT NULL,
+    trainer_name VARCHAR(100),
     player_level INTEGER CHECK (player_level >= 1 AND player_level <= 50),
     location VARCHAR(200),
     description TEXT,
@@ -46,19 +46,3 @@ CREATE INDEX idx_friend_codes_location_lower ON friend_codes(LOWER(location)) WH
 -- Add constraint to ensure friend_code is exactly 12 digits
 ALTER TABLE friend_codes ADD CONSTRAINT chk_friend_code_format 
     CHECK (friend_code ~ '^[0-9]{12}$');
-
--- Add constraint to ensure trainer_name is not empty
-ALTER TABLE friend_codes ADD CONSTRAINT chk_trainer_name_not_empty 
-    CHECK (LENGTH(TRIM(trainer_name)) > 0);
-
--- Add constraint to ensure location is not empty if provided
-ALTER TABLE friend_codes ADD CONSTRAINT chk_location_not_empty 
-    CHECK (location IS NULL OR LENGTH(TRIM(location)) > 0);
-
--- Add constraint to ensure description is not empty if provided
-ALTER TABLE friend_codes ADD CONSTRAINT chk_description_not_empty 
-    CHECK (description IS NULL OR LENGTH(TRIM(description)) > 0);
-
--- Add constraint to ensure expires_at is in the future when set
-ALTER TABLE friend_codes ADD CONSTRAINT chk_expires_at_future 
-    CHECK (expires_at IS NULL OR expires_at > created_at);
