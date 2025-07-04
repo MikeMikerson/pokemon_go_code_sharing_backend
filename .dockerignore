@@ -1,0 +1,26 @@
+# Git
+.git
+.github
+.gitattributes
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iws
+*.iml
+*.ipr
+
+# Build artifacts
+build/
+out/
+.gradle/
+
+# Local environment
+.env
+.DS_Store
+
+# Documentation and other files
+HELP.md
+postman/
+swagger/

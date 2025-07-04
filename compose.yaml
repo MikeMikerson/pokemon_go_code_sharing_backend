@@ -5,6 +5,7 @@ services:
       - 8080:8080
     environment:
       - POSTGRES_DB=pokecodeshare
+      - SPRING_PROFILES_ACTIVE=dev
     networks:
       - spring-postgres
   db:
