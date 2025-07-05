@@ -224,24 +224,6 @@ public class FriendCodeController {
     }
 
     /**
-     * Deactivate a friend code (soft delete).
-     * DELETE /api/friend-codes/{id}
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deactivateFriendCode(@PathVariable Long id) {
-        log.info("Deactivating friend code: {}", id);
-        
-        // For now, we'll allow anonymous deactivation (userId = null)
-        // In the future, authentication can be added to extract userId from JWT token
-        Long userId = null;
-        
-        friendCodeService.deactivateFriendCode(id, userId);
-        
-        log.info("Successfully deactivated friend code: {}", id);
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
      * Search friend codes with query parameters.
      * GET /api/friend-codes/search
      */

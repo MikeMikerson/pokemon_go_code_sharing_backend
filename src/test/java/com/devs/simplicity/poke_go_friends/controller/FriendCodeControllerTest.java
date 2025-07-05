@@ -210,24 +210,6 @@ class FriendCodeControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/friend-codes/{id} - Delete Friend Code")
-    class DeleteFriendCodeTests {
-
-        @Test
-        @DisplayName("Should deactivate friend code successfully")
-        void shouldDeactivateFriendCodeSuccessfully() throws Exception {
-            // Given
-            doNothing().when(friendCodeService).deactivateFriendCode(1L, null);
-
-            // When & Then
-            mockMvc.perform(delete("/api/friend-codes/1"))
-                    .andExpect(status().isNoContent());
-
-            verify(friendCodeService).deactivateFriendCode(1L, null);
-        }
-    }
-
-    @Nested
     @DisplayName("GET /api/friend-codes/stats - Get Statistics")
     class GetStatisticsTests {
 

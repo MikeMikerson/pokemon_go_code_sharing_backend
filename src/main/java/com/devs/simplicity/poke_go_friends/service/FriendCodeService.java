@@ -313,30 +313,6 @@ public class FriendCodeService {
 
 
     /**
-     * Marks a friend code as inactive (soft delete).
-     *
-     * @param id     The friend code ID
-     * @param userId The user requesting the deactivation (must be the owner)
-     * @throws FriendCodeNotFoundException if the friend code is not found
-     */
-    public void deactivateFriendCode(Long id, Long userId) {
-        log.info("Deactivating friend code: {} by user: {}", id, userId);
-        
-        FriendCode friendCode = getFriendCodeById(id);
-        
-        // Check ownership (either the owner or admin)
-        if (userId != null && friendCode.getUser() != null && 
-            !friendCode.getUser().getId().equals(userId)) {
-            throw new FriendCodeNotFoundException("Friend code not found or access denied");
-        }
-        
-        friendCode.deactivate();
-        friendCodeRepository.save(friendCode);
-        
-        log.info("Successfully deactivated friend code: {}", id);
-    }
-
-    /**
      * Sets an expiration date for a friend code.
      *
      * @param id         The friend code ID

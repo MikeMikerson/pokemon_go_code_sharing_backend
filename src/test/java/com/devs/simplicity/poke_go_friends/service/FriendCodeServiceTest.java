@@ -422,23 +422,6 @@ class FriendCodeServiceTest {
     class DeleteOperationsTest {
 
         @Test
-        @DisplayName("Should deactivate friend code by owner")
-        void shouldDeactivateFriendCodeByOwner() {
-            // Given
-            Long id = 1L;
-            Long userId = 1L;
-            
-            when(friendCodeRepository.findById(id)).thenReturn(Optional.of(testFriendCode));
-            when(friendCodeRepository.save(any(FriendCode.class))).thenReturn(testFriendCode);
-
-            // When
-            friendCodeService.deactivateFriendCode(id, userId);
-
-            // Then
-            verify(friendCodeRepository).save(testFriendCode);
-        }
-
-        @Test
         @DisplayName("Should set friend code expiration")
         void shouldSetFriendCodeExpiration() {
             // Given
