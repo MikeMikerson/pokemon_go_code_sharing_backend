@@ -311,67 +311,6 @@ public class FriendCodeService {
         return friendCodeRepository.findRecentSubmissions(since, pageable);
     }
 
-    /**
-     * Updates a friend code (only allowed by the owner).
-     *
-     * @param id          The friend code ID
-     * @param trainerName New trainer name (optional)
-     * @param playerLevel New player level (optional)
-     * @param location    New location (optional)
-     * @param description New description (optional)
-     * @param team        New team (optional)
-     * @param goals       New goals (optional)
-     * @param userId      The user making the update (must be the owner)
-     * @return The updated FriendCode entity
-     * @throws FriendCodeNotFoundException if the friend code is not found
-     */
-    public FriendCode updateFriendCode(Long id, String trainerName, Integer playerLevel,
-                                      String location, String description, Team team, Set<Goal> goals, Long userId) {
-        log.info("Updating friend code: {} by user: {}", id, userId);
-        
-        FriendCode friendCode = getFriendCodeById(id);
-        
-        // Check ownership (either the owner or admin)
-        if (userId != null && friendCode.getUser() != null && 
-            !friendCode.getUser().getId().equals(userId)) {
-            throw new FriendCodeNotFoundException("Friend code not found or access denied");
-        }
-        
-        // Validate and update new values if provided
-        if (StringUtils.hasText(trainerName)) {
-            validationService.validateTrainerName(trainerName);
-            friendCode.setTrainerName(trainerName);
-        }
-        
-        if (playerLevel != null) {
-            validationService.validatePlayerLevel(playerLevel);
-            friendCode.setPlayerLevel(playerLevel);
-        }
-        
-        if (location != null) {
-            validationService.validateLocation(location);
-            friendCode.setLocation(location);
-        }
-        
-        if (description != null) {
-            validationService.validateDescription(description);
-            friendCode.setDescription(description);
-        }
-        
-        if (team != null) {
-            friendCode.setTeam(team);
-        }
-        
-        if (goals != null) {
-            friendCode.setGoals(goals);
-        }
-        
-        FriendCode updatedFriendCode = friendCodeRepository.save(friendCode);
-        
-        log.info("Successfully updated friend code: {}", id);
-        return updatedFriendCode;
-    }
-
 
     /**
      * Marks a friend code as inactive (soft delete).

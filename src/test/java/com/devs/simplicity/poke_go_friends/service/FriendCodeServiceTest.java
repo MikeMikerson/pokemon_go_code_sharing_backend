@@ -418,50 +418,8 @@ class FriendCodeServiceTest {
     }
 
     @Nested
-    @DisplayName("Update and Delete Operations")
-    class UpdateAndDeleteOperationsTest {
-
-        @Test
-        @DisplayName("Should update friend code by owner")
-        void shouldUpdateFriendCodeByOwner() {
-            // Given
-            Long id = 1L;
-            Long userId = 1L;
-            String newTrainerName = "UpdatedTrainer";
-            
-            when(friendCodeRepository.findById(id)).thenReturn(Optional.of(testFriendCode));
-            when(friendCodeRepository.save(any(FriendCode.class))).thenReturn(testFriendCode);
-
-            // When
-            FriendCode result = friendCodeService.updateFriendCode(
-                id, newTrainerName, 30, "Updated Location", "Updated description", null, null, userId);
-
-            // Then
-            assertThat(result).isNotNull();
-            verify(validationService).validateTrainerName(newTrainerName);
-            verify(validationService).validatePlayerLevel(30);
-            verify(validationService).validateLocation("Updated Location");
-            verify(validationService).validateDescription("Updated description");
-            verify(friendCodeRepository).save(testFriendCode);
-        }
-
-        @Test
-        @DisplayName("Should throw exception when updating friend code by non-owner")
-        void shouldThrowExceptionWhenUpdatingFriendCodeByNonOwner() {
-            // Given
-            Long id = 1L;
-            Long userId = 999L; // Different user
-            
-            when(friendCodeRepository.findById(id)).thenReturn(Optional.of(testFriendCode));
-
-            // When & Then
-            assertThatThrownBy(() -> friendCodeService.updateFriendCode(
-                id, "NewName", null, null, null, null, null, userId))
-                .isInstanceOf(FriendCodeNotFoundException.class)
-                .hasMessageContaining("access denied");
-
-            verify(friendCodeRepository, never()).save(any());
-        }
+    @DisplayName("Delete Operations")
+    class DeleteOperationsTest {
 
         @Test
         @DisplayName("Should deactivate friend code by owner")

@@ -49,7 +49,6 @@ class FriendCodeControllerTest {
 
     private FriendCode testFriendCode;
     private FriendCodeSubmissionRequest validSubmissionRequest;
-    private FriendCodeUpdateRequest validUpdateRequest;
 
     @BeforeEach
     void setUp() {
@@ -60,9 +59,6 @@ class FriendCodeControllerTest {
 
         validSubmissionRequest = new FriendCodeSubmissionRequest(
             "123456789012", "TestTrainer", 25, "New York", "Looking for friends");
-
-        validUpdateRequest = new FriendCodeUpdateRequest(
-            "UpdatedTrainer", 30, "Los Angeles", "Updated description");
     }
 
     @Nested
@@ -210,38 +206,6 @@ class FriendCodeControllerTest {
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404))
                     .andExpect(jsonPath("$.error").value("Resource Not Found"));
-        }
-    }
-
-    @Nested
-    @DisplayName("PUT /api/friend-codes/{id} - Update Friend Code")
-    class UpdateFriendCodeTests {
-
-        @Test
-        @DisplayName("Should update friend code successfully")
-        void shouldUpdateFriendCodeSuccessfully() throws Exception {
-            // Given
-            FriendCode updatedFriendCode = new FriendCode("123456789012", "UpdatedTrainer", 30, "Los Angeles", "Updated description");
-            updatedFriendCode.setId(1L);
-            updatedFriendCode.setCreatedAt(LocalDateTime.now());
-            updatedFriendCode.setUpdatedAt(LocalDateTime.now());
-            
-            when(friendCodeService.updateFriendCode(anyLong(), anyString(), anyInt(), 
-                    anyString(), anyString(), isNull(), isNull(), any())).thenReturn(updatedFriendCode);
-
-            // When & Then
-            mockMvc.perform(put("/api/friend-codes/1")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validUpdateRequest)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(1))
-                    .andExpect(jsonPath("$.trainerName").value("UpdatedTrainer"))
-                    .andExpect(jsonPath("$.playerLevel").value(30))
-                    .andExpect(jsonPath("$.location").value("Los Angeles"))
-                    .andExpect(jsonPath("$.description").value("Updated description"));
-
-            verify(friendCodeService).updateFriendCode(
-                eq(1L), eq("UpdatedTrainer"), eq(30), eq("Los Angeles"), eq("Updated description"), isNull(), isNull(), any());
         }
     }
 

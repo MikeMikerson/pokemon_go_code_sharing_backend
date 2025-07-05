@@ -1,6 +1,9 @@
 package com.devs.simplicity.poke_go_friends.controller;
 
-import com.devs.simplicity.poke_go_friends.dto.*;
+import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
+import com.devs.simplicity.poke_go_friends.dto.FriendCodeFeedResponse;
+import com.devs.simplicity.poke_go_friends.dto.FriendCodeResponse;
+import com.devs.simplicity.poke_go_friends.dto.FriendCodeSubmissionRequest;
 import com.devs.simplicity.poke_go_friends.entity.FriendCode;
 import com.devs.simplicity.poke_go_friends.service.FriendCodeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -217,43 +220,6 @@ public class FriendCodeController {
         FriendCode friendCode = friendCodeService.getFriendCodeById(id);
         FriendCodeResponse response = FriendCodeResponse.fromEntity(friendCode);
         
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Update a friend code (owner only).
-     * PUT /api/friend-codes/{id}
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<FriendCodeResponse> updateFriendCode(
-            @PathVariable Long id,
-            @Valid @RequestBody FriendCodeUpdateRequest request) {
-        
-        log.info("Updating friend code: {}", id);
-        
-        if (!request.hasAnyUpdate()) {
-            log.warn("No update fields provided for friend code: {}", id);
-            return ResponseEntity.badRequest().build();
-        }
-        
-        // For now, we'll allow anonymous updates (userId = null)
-        // In the future, authentication can be added to extract userId from JWT token
-        Long userId = null;
-        
-        FriendCode updatedFriendCode = friendCodeService.updateFriendCode(
-            id,
-            request.getTrainerName(),
-            request.getPlayerLevel(),
-            request.getLocation(),
-            request.getDescription(),
-            request.getTeam(),
-            request.getGoals(),
-            userId
-        );
-        
-        FriendCodeResponse response = FriendCodeResponse.fromEntity(updatedFriendCode);
-        
-        log.info("Successfully updated friend code: {}", id);
         return ResponseEntity.ok(response);
     }
 
