@@ -33,6 +33,11 @@
       "type": "string"
     },
     {
+      "key": "minimalTestFriendCode",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "currentTimestamp",
       "value": "",
       "type": "string"
@@ -356,6 +361,16 @@
           "name": "Submit Friend Code - Minimal Valid Data",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generate a valid 12-digit friend code for minimal test",
+                  "pm.collectionVariables.set('minimalTestFriendCode', String(Math.floor(Math.random() * 900000000000) + 100000000000));"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -369,6 +384,18 @@
                   "    pm.expect(response).to.have.property('id');",
                   "    pm.expect(response).to.have.property('friendCode');",
                   "    pm.expect(response).to.have.property('isActive');",
+                  "});",
+                  "",
+                  "pm.test('Friend code matches submitted value', function () {",
+                  "    const response = pm.response.json();",
+                  "    const requestBody = JSON.parse(pm.request.body.raw);",
+                  "    pm.expect(response.friendCode.replace(/[\\s-]/g, '')).to.eql(requestBody.friendCode.replace(/[\\s-]/g, ''));",
+                  "});",
+                  "",
+                  "pm.test('Friend code is exactly 12 digits', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.friendCode.replace(/[\\s-]/g, '')).to.have.lengthOf(12);",
+                  "    pm.expect(response.friendCode.replace(/[\\s-]/g, '')).to.match(/^\\d{12}$/);",
                   "});",
                   "",
                   "pm.test('Optional fields are null or empty when not provided', function () {",
@@ -395,7 +422,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"friendCode\": \"{{$randomInt}}{{$randomInt}}{{$randomInt}}\"\n}"
+              "raw": "{\n  \"friendCode\": \"{{minimalTestFriendCode}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/friend-codes",
@@ -594,10 +621,12 @@
                   "    pm.response.to.have.status(400);",
                   "});",
                   "",
-                  "pm.test('Error response indicates validation failure', function () {",
+                  "pm.test('Error message indicates friend code format validation', function () {",
                   "    const response = pm.response.json();",
-                  "    pm.expect(response).to.have.property('message');",
-                  "    pm.expect(response.status).to.eql(400);",
+                  "    const message = response.message.toLowerCase();",
+                  "    pm.expect(message).to.satisfy(msg => ",
+                  "        msg.includes('friend') || msg.includes('code') || msg.includes('format') || msg.includes('pattern') || msg.includes('validation')",
+                  "    );",
                   "});"
                 ]
               }
@@ -635,10 +664,12 @@
                   "    pm.response.to.have.status(400);",
                   "});",
                   "",
-                  "pm.test('Error response indicates validation failure', function () {",
+                  "pm.test('Error message indicates friend code format validation', function () {",
                   "    const response = pm.response.json();",
-                  "    pm.expect(response).to.have.property('message');",
-                  "    pm.expect(response.status).to.eql(400);",
+                  "    const message = response.message.toLowerCase();",
+                  "    pm.expect(message).to.satisfy(msg => ",
+                  "        msg.includes('friend') || msg.includes('code') || msg.includes('format') || msg.includes('pattern') || msg.includes('validation')",
+                  "    );",
                   "});"
                 ]
               }

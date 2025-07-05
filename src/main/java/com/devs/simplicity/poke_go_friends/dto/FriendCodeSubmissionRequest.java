@@ -23,12 +23,12 @@ import java.util.Set;
 public class FriendCodeSubmissionRequest {
 
     @NotBlank(message = "Friend code is required")
-    @Pattern(regexp = "^\\d{12}$|^\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}$", 
-             message = "Friend code must be exactly 12 digits (spaces and dashes will be removed)")
+    @Pattern(regexp = "^\\d{12}$", 
+             message = "Friend code must be exactly 12 digits")
     @Schema(
         description = "12-digit Pokemon Go friend code",
         example = "123456789012",
-        pattern = "^\\d{12}$|^\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}$"
+        pattern = "^\\d{12}$"
     )
     private String friendCode;
 

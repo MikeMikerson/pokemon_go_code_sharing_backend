@@ -128,7 +128,7 @@ class FriendCodeSubmissionRequestTest {
             assertThat(violations).extracting(ConstraintViolation::getMessage)
                 .containsExactlyInAnyOrder(
                     "Friend code is required",
-                    "Friend code must be exactly 12 digits (spaces and dashes will be removed)");
+                    "Friend code must be exactly 12 digits");
         }
 
         @Test
@@ -144,7 +144,7 @@ class FriendCodeSubmissionRequestTest {
             // Assert
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Friend code must be exactly 12 digits (spaces and dashes will be removed)");
+                .isEqualTo("Friend code must be exactly 12 digits");
         }
 
         @Test
@@ -160,7 +160,7 @@ class FriendCodeSubmissionRequestTest {
             // Assert
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Friend code must be exactly 12 digits (spaces and dashes will be removed)");
+                .isEqualTo("Friend code must be exactly 12 digits");
         }
 
         @Test
@@ -176,7 +176,55 @@ class FriendCodeSubmissionRequestTest {
             // Assert
             assertThat(violations).hasSize(1);
             assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("Friend code must be exactly 12 digits (spaces and dashes will be removed)");
+                .isEqualTo("Friend code must be exactly 12 digits");
+        }
+
+        @Test
+        @DisplayName("should fail validation when friend code contains spaces")
+        void shouldFailValidationWhenFriendCodeContainsSpaces() {
+            // Arrange
+            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
+                "1234 5678 9012", "TestTrainer");
+
+            // Act
+            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).hasSize(1);
+            assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("Friend code must be exactly 12 digits");
+        }
+
+        @Test
+        @DisplayName("should fail validation when friend code contains dashes")
+        void shouldFailValidationWhenFriendCodeContainsDashes() {
+            // Arrange
+            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
+                "1234-5678-9012", "TestTrainer");
+
+            // Act
+            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).hasSize(1);
+            assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("Friend code must be exactly 12 digits");
+        }
+
+        @Test
+        @DisplayName("should fail validation when friend code contains mixed spaces and dashes")
+        void shouldFailValidationWhenFriendCodeContainsMixedSpacesAndDashes() {
+            // Arrange
+            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
+                "1234 5678-9012", "TestTrainer");
+
+            // Act
+            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).hasSize(1);
+            assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("Friend code must be exactly 12 digits");
         }
     }
 
