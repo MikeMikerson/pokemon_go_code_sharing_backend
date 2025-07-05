@@ -47,8 +47,10 @@ public class User {
     @NotBlank(message = "Password is required")
     private String passwordHash;
 
-    @Column(name = "trainer_name", length = 100)
-    @Size(max = 100, message = "Trainer name cannot exceed 100 characters")
+    @Column(name = "trainer_name", length = 20)
+    @Size(max = 20, message = "Trainer name cannot exceed 20 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9]*$", 
+             message = "Trainer name can only contain letters and numbers")
     private String trainerName;
 
     @Column(name = "player_level")

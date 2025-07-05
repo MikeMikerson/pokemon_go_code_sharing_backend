@@ -137,8 +137,8 @@ class FriendCodeValidationTest {
     @Test
     @DisplayName("Valid trainer name sizes should pass validation")
     void trainerNameValidSizes_shouldPassValidation() {
-        // Given - minimum length
-        friendCode.setTrainerName("AB");
+        // Given - minimum length (1 character)
+        friendCode.setTrainerName("A");
 
         // When
         Set<ConstraintViolation<FriendCode>> violations = validator.validate(friendCode);
@@ -147,10 +147,53 @@ class FriendCodeValidationTest {
         assertThat(violations).isEmpty();
 
         // Given - maximum length
-        friendCode.setTrainerName("A".repeat(100));
+        friendCode.setTrainerName("A".repeat(20));
 
         // When
         violations = validator.validate(friendCode);
+
+        // Then
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Trainer name must not exceed 20 characters")
+    void trainerNameSizeValidation_shouldFailForTooLong() {
+        // Given
+        friendCode.setTrainerName("A".repeat(21));
+
+        // When
+        Set<ConstraintViolation<FriendCode>> violations = validator.validate(friendCode);
+
+        // Then
+        assertThat(violations).hasSize(1);
+        assertThat(violations.iterator().next().getMessage())
+            .isEqualTo("Trainer name cannot exceed 20 characters");
+    }
+
+    @Test
+    @DisplayName("Trainer name must contain only letters and numbers")
+    void trainerNameValidation_shouldFailForSpecialCharacters() {
+        // Given
+        friendCode.setTrainerName("Test@Name");
+
+        // When
+        Set<ConstraintViolation<FriendCode>> violations = validator.validate(friendCode);
+
+        // Then
+        assertThat(violations).hasSize(1);
+        assertThat(violations.iterator().next().getMessage())
+            .isEqualTo("Trainer name can only contain letters and numbers");
+    }
+
+    @Test
+    @DisplayName("Valid alphanumeric trainer name should pass validation")
+    void trainerNameValidation_shouldPassForAlphanumeric() {
+        // Given
+        friendCode.setTrainerName("TestTrainer123");
+
+        // When
+        Set<ConstraintViolation<FriendCode>> violations = validator.validate(friendCode);
 
         // Then
         assertThat(violations).isEmpty();

@@ -101,8 +101,7 @@ class ValidationServiceTest {
     class TrainerNameValidationTest {
 
         @ParameterizedTest
-        @ValueSource(strings = {"Ash", "PikachuMaster", "Trainer_123", "Red-Blue", "Player.Name", 
-                               "Team Rocket", "A very long trainer name but still valid"})
+        @ValueSource(strings = {"Ash", "PikachuMaster", "Trainer123", "TestPlayer", "User1", "ABC123", "MegaTrainer"})
         @DisplayName("Should accept valid trainer names")
         void shouldAcceptValidTrainerNames(String validName) {
             assertThatNoException().isThrownBy(() -> 
@@ -118,20 +117,12 @@ class ValidationServiceTest {
         }
 
         @Test
-        @DisplayName("Should reject trainer name that is too short")
-        void shouldRejectTooShortTrainerName() {
-            assertThatThrownBy(() -> validationService.validateTrainerName("A"))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("between 2 and 100 characters");
-        }
-
-        @Test
         @DisplayName("Should reject trainer name that is too long")
         void shouldRejectTooLongTrainerName() {
-            String longName = "A".repeat(101);
+            String longName = "A".repeat(21);
             assertThatThrownBy(() -> validationService.validateTrainerName(longName))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("between 2 and 100 characters");
+                .hasMessageContaining("cannot exceed 20 characters");
         }
 
         @ParameterizedTest
@@ -148,12 +139,12 @@ class ValidationServiceTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"Trainer@123", "Player#1", "Name$", "Test%", "User&Name"})
+        @ValueSource(strings = {"Trainer@123", "Player#1", "Name$", "Test%", "User&Name", "Red-Blue", "Player.Name", "Team Rocket", "Trainer_123"})
         @DisplayName("Should reject trainer names with invalid characters")
         void shouldRejectInvalidCharacters(String invalidName) {
             assertThatThrownBy(() -> validationService.validateTrainerName(invalidName))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("invalid characters");
+                .hasMessageContaining("can only contain letters and numbers");
         }
     }
 

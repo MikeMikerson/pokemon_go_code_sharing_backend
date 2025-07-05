@@ -32,10 +32,14 @@ public class FriendCodeSubmissionRequest {
     )
     private String friendCode;
 
+    @Size(max = 20, message = "Trainer name cannot exceed 20 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9]*$", 
+             message = "Trainer name can only contain letters and numbers")
     @Schema(
         description = "Pokemon Go trainer name",
-        example = "PikachuMaster99",
-        maxLength = 100
+        example = "PikachuMaster",
+        maxLength = 20,
+        pattern = "^[a-zA-Z0-9]*$"
     )
     private String trainerName;
 

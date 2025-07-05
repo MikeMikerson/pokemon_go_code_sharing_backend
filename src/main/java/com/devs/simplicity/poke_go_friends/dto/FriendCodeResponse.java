@@ -28,7 +28,7 @@ public class FriendCodeResponse {
     @Schema(description = "Pokemon Go friend code", example = "123456789012")
     private String friendCode;
     
-    @Schema(description = "Pokemon Go trainer name", example = "PikachuMaster99")
+    @Schema(description = "Pokemon Go trainer name", example = "PikachuMaster", maxLength = 20)
     private String trainerName;
     
     @Schema(description = "Current player level", example = "35", minimum = "1", maximum = "50")

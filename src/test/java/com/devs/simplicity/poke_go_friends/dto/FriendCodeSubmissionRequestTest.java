@@ -78,7 +78,7 @@ class FriendCodeSubmissionRequestTest {
         @DisplayName("should pass validation with maximum valid values")
         void shouldPassValidationWithMaximumValues() {
             // Arrange
-            String longTrainerName = "A".repeat(100);
+            String longTrainerName = "A".repeat(20);
             String longLocation = "B".repeat(200);
             String longDescription = "C".repeat(1000);
             
@@ -252,6 +252,52 @@ class FriendCodeSubmissionRequestTest {
             // Arrange
             FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
                 "123456789012", "");
+
+            // Act
+            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("should fail validation when trainer name exceeds 20 characters")
+        void shouldFailValidationWhenTrainerNameTooLong() {
+            // Arrange
+            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
+                "123456789012", "A".repeat(21));
+
+            // Act
+            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).hasSize(1);
+            assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("Trainer name cannot exceed 20 characters");
+        }
+
+        @Test
+        @DisplayName("should fail validation when trainer name contains special characters")
+        void shouldFailValidationWhenTrainerNameHasSpecialCharacters() {
+            // Arrange
+            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
+                "123456789012", "Test@Name");
+
+            // Act
+            Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);
+
+            // Assert
+            assertThat(violations).hasSize(1);
+            assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("Trainer name can only contain letters and numbers");
+        }
+
+        @Test
+        @DisplayName("should pass validation with alphanumeric trainer name")
+        void shouldPassValidationWithAlphanumericTrainerName() {
+            // Arrange
+            FriendCodeSubmissionRequest request = new FriendCodeSubmissionRequest(
+                "123456789012", "TestTrainer123");
 
             // Act
             Set<ConstraintViolation<FriendCodeSubmissionRequest>> violations = validator.validate(request);

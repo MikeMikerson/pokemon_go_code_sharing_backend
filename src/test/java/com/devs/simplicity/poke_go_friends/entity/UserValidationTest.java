@@ -283,10 +283,10 @@ class UserValidationTest {
     }
 
     @Test
-    @DisplayName("Trainer name must not exceed 100 characters")
+    @DisplayName("Trainer name must not exceed 20 characters")
     void trainerNameSizeValidation_shouldFailForTooLong() {
         // Given
-        user.setTrainerName("A".repeat(101));
+        user.setTrainerName("A".repeat(21));
 
         // When
         Set<ConstraintViolation<User>> violations = validator.validate(user);
@@ -294,14 +294,14 @@ class UserValidationTest {
         // Then
         assertThat(violations).hasSize(1);
         assertThat(violations.iterator().next().getMessage())
-            .isEqualTo("Trainer name cannot exceed 100 characters");
+            .isEqualTo("Trainer name cannot exceed 20 characters");
     }
 
     @Test
     @DisplayName("Valid trainer name sizes should pass validation")
     void trainerNameSizeValidation_shouldPassForValidSizes() {
         // Given - maximum length
-        user.setTrainerName("A".repeat(100));
+        user.setTrainerName("A".repeat(20));
 
         // When
         Set<ConstraintViolation<User>> violations = validator.validate(user);
@@ -314,6 +314,34 @@ class UserValidationTest {
 
         // When
         violations = validator.validate(user);
+
+        // Then
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Trainer name must contain only letters and numbers")
+    void trainerNameValidation_shouldFailForSpecialCharacters() {
+        // Given
+        user.setTrainerName("Test@Name");
+
+        // When
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+
+        // Then
+        assertThat(violations).hasSize(1);
+        assertThat(violations.iterator().next().getMessage())
+            .isEqualTo("Trainer name can only contain letters and numbers");
+    }
+
+    @Test
+    @DisplayName("Valid alphanumeric trainer name should pass validation")
+    void trainerNameValidation_shouldPassForAlphanumeric() {
+        // Given
+        user.setTrainerName("TestTrainer123");
+
+        // When
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
 
         // Then
         assertThat(violations).isEmpty();

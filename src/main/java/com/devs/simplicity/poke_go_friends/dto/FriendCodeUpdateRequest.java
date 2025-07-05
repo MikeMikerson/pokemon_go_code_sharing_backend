@@ -21,9 +21,9 @@ import java.util.Set;
 @AllArgsConstructor
 public class FriendCodeUpdateRequest {
 
-    @Size(min = 2, max = 100, message = "Trainer name must be between 2 and 100 characters")
-    @Pattern(regexp = "^[\\p{L}\\p{N}\\s._-]*$", 
-             message = "Trainer name can only contain letters, numbers, spaces, periods, underscores, and hyphens")
+    @Size(max = 20, message = "Trainer name cannot exceed 20 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9]*$", 
+             message = "Trainer name can only contain letters and numbers")
     private String trainerName;
 
     @jakarta.validation.constraints.Min(value = 1, message = "Player level must be at least 1")

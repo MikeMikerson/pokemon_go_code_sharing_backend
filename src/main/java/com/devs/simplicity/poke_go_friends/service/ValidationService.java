@@ -31,9 +31,8 @@ public class ValidationService {
     // Friend code validation pattern (exactly 12 digits)
     private static final Pattern FRIEND_CODE_PATTERN = Pattern.compile("^\\d{12}$");
     
-    // Enhanced trainer name validation pattern (letters, numbers, spaces, limited punctuation)
-    // Allows Unicode letters for international names
-    private static final Pattern TRAINER_NAME_PATTERN = Pattern.compile("^[\\p{L}\\p{N}\\s._-]+$");
+    // Enhanced trainer name validation pattern (letters and numbers only)
+    private static final Pattern TRAINER_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9]+$");
     
     // Pattern to detect suspicious character sequences
     private static final Pattern SUSPICIOUS_PATTERN = Pattern.compile("(.)\\1{4,}"); // 5+ repeated chars
@@ -97,12 +96,12 @@ public class ValidationService {
             throw new ValidationException("Trainer name contains too many invalid characters");
         }
 
-        if (sanitized.length() < 2 || sanitized.length() > 100) {
-            throw new ValidationException("Trainer name must be between 2 and 100 characters");
+        if (sanitized.length() > 20) {
+            throw new ValidationException("Trainer name cannot exceed 20 characters");
         }
 
         if (!TRAINER_NAME_PATTERN.matcher(sanitized).matches()) {
-            throw new ValidationException("Trainer name contains invalid characters. Only letters, numbers, spaces, periods, underscores, and hyphens are allowed");
+            throw new ValidationException("Trainer name can only contain letters and numbers");
         }
 
         // Check for suspicious patterns (repeated characters)

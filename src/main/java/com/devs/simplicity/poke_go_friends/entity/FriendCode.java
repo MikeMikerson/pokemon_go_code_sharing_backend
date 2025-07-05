@@ -37,7 +37,10 @@ public class FriendCode {
     @Pattern(regexp = "\\d{12}", message = "Friend code must be exactly 12 digits")
     private String friendCode;
 
-    @Column(name = "trainer_name", nullable = true, length = 100)
+    @Column(name = "trainer_name", nullable = true, length = 20)
+    @Size(max = 20, message = "Trainer name cannot exceed 20 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9]*$", 
+             message = "Trainer name can only contain letters and numbers")
     private String trainerName;
 
     @Column(name = "player_level")
