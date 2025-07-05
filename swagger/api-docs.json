@@ -35,112 +35,6 @@
         }
     ],
     "paths": {
-        "/api/friend-codes/{id}": {
-            "get": {
-                "tags": [
-                    "Friend Codes"
-                ],
-                "summary": "Get friend code by ID",
-                "description": "Retrieves a specific friend code by its unique identifier.",
-                "operationId": "getFriendCode",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Friend code ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        },
-                        "example": 123
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Friend code found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/FriendCodeResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Friend code not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "Friend Codes"
-                ],
-                "operationId": "updateFriendCode",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FriendCodeUpdateRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/FriendCodeResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "Friend Codes"
-                ],
-                "operationId": "deactivateFriendCode",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
         "/api/friend-codes": {
             "get": {
                 "tags": [
@@ -280,8 +174,18 @@
                     "required": true
                 },
                 "responses": {
-                    "409": {
-                        "description": "Friend code already exists",
+                    "400": {
+                        "description": "Invalid request data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -300,18 +204,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Invalid request data",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Rate limit exceeded",
+                    "409": {
+                        "description": "Friend code already exists",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -332,14 +226,14 @@
                 "description": "Returns the overall health status of the application including database connectivity.",
                 "operationId": "getHealth",
                 "responses": {
-                    "503": {
-                        "description": "Application is unhealthy",
+                    "200": {
+                        "description": "Application is healthy",
                         "content": {
                             "application/json": {}
                         }
                     },
-                    "200": {
-                        "description": "Application is healthy",
+                    "503": {
+                        "description": "Application is unhealthy",
                         "content": {
                             "application/json": {}
                         }
@@ -386,6 +280,51 @@
                                     "additionalProperties": {
                                         "type": "string"
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/friend-codes/{id}": {
+            "get": {
+                "tags": [
+                    "Friend Codes"
+                ],
+                "summary": "Get friend code by ID",
+                "description": "Retrieves a specific friend code by its unique identifier.",
+                "operationId": "getFriendCode",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Friend code ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "example": 123
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Friend code found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FriendCodeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Friend code not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
@@ -552,139 +491,6 @@
     },
     "components": {
         "schemas": {
-            "FriendCodeUpdateRequest": {
-                "type": "object",
-                "properties": {
-                    "trainerName": {
-                        "maxLength": 100,
-                        "minLength": 2,
-                        "pattern": "^[\\p{L}\\p{N}\\s._-]*$",
-                        "type": "string"
-                    },
-                    "playerLevel": {
-                        "maximum": 50,
-                        "minimum": 1,
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "location": {
-                        "maxLength": 200,
-                        "minLength": 0,
-                        "type": "string"
-                    },
-                    "description": {
-                        "maxLength": 1000,
-                        "minLength": 0,
-                        "type": "string"
-                    },
-                    "team": {
-                        "type": "string",
-                        "enum": [
-                            "mystic",
-                            "valor",
-                            "instinct"
-                        ]
-                    },
-                    "goals": {
-                        "uniqueItems": true,
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "enum": [
-                                "gifts",
-                                "exp",
-                                "raids",
-                                "all"
-                            ]
-                        }
-                    }
-                }
-            },
-            "FriendCodeResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "description": "Unique identifier for the friend code",
-                        "format": "int64",
-                        "example": 123
-                    },
-                    "friendCode": {
-                        "type": "string",
-                        "description": "Pokemon Go friend code",
-                        "example": "123456789012"
-                    },
-                    "trainerName": {
-                        "type": "string",
-                        "description": "Pokemon Go trainer name",
-                        "example": "PikachuMaster99"
-                    },
-                    "playerLevel": {
-                        "maximum": 50,
-                        "minimum": 1,
-                        "type": "integer",
-                        "description": "Current player level",
-                        "format": "int32",
-                        "example": 35
-                    },
-                    "location": {
-                        "type": "string",
-                        "description": "Geographic location",
-                        "example": "New York, NY"
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Description about the trainer",
-                        "example": "Looking for daily gift exchanges!"
-                    },
-                    "team": {
-                        "type": "string",
-                        "description": "Pokemon Go team",
-                        "example": "MYSTIC",
-                        "enum": [
-                            "mystic",
-                            "valor",
-                            "instinct"
-                        ]
-                    },
-                    "goals": {
-                        "uniqueItems": true,
-                        "type": "array",
-                        "description": "Set of goals the trainer is interested in",
-                        "items": {
-                            "type": "string",
-                            "description": "Set of goals the trainer is interested in",
-                            "enum": [
-                                "gifts",
-                                "exp",
-                                "raids",
-                                "all"
-                            ]
-                        }
-                    },
-                    "isActive": {
-                        "type": "boolean",
-                        "description": "Whether the friend code is active",
-                        "example": true
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "description": "When the friend code was created",
-                        "format": "date-time"
-                    },
-                    "updatedAt": {
-                        "type": "string",
-                        "description": "When the friend code was last updated",
-                        "format": "date-time"
-                    },
-                    "expiresAt": {
-                        "type": "string",
-                        "description": "When the friend code expires (optional)",
-                        "format": "date-time"
-                    }
-                },
-                "description": "Response object containing friend code information"
-            },
             "FriendCodeSubmissionRequest": {
                 "required": [
                     "friendCode"
@@ -692,16 +498,18 @@
                 "type": "object",
                 "properties": {
                     "friendCode": {
-                        "pattern": "^\\d{12}$|^\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}$",
+                        "pattern": "^\\d{12}$",
                         "type": "string",
                         "description": "12-digit Pokemon Go friend code",
                         "example": "123456789012"
                     },
                     "trainerName": {
-                        "maxLength": 100,
+                        "maxLength": 20,
+                        "minLength": 0,
+                        "pattern": "^[a-zA-Z0-9]*$",
                         "type": "string",
                         "description": "Pokemon Go trainer name",
-                        "example": "PikachuMaster99"
+                        "example": "PikachuMaster"
                     },
                     "playerLevel": {
                         "maximum": 50,
@@ -797,6 +605,92 @@
                     }
                 },
                 "description": "Standard error response format"
+            },
+            "FriendCodeResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "Unique identifier for the friend code",
+                        "format": "int64",
+                        "example": 123
+                    },
+                    "friendCode": {
+                        "type": "string",
+                        "description": "Pokemon Go friend code",
+                        "example": "123456789012"
+                    },
+                    "trainerName": {
+                        "maxLength": 20,
+                        "type": "string",
+                        "description": "Pokemon Go trainer name",
+                        "example": "PikachuMaster"
+                    },
+                    "playerLevel": {
+                        "maximum": 50,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Current player level",
+                        "format": "int32",
+                        "example": 35
+                    },
+                    "location": {
+                        "type": "string",
+                        "description": "Geographic location",
+                        "example": "New York, NY"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description about the trainer",
+                        "example": "Looking for daily gift exchanges!"
+                    },
+                    "team": {
+                        "type": "string",
+                        "description": "Pokemon Go team",
+                        "example": "MYSTIC",
+                        "enum": [
+                            "mystic",
+                            "valor",
+                            "instinct"
+                        ]
+                    },
+                    "goals": {
+                        "uniqueItems": true,
+                        "type": "array",
+                        "description": "Set of goals the trainer is interested in",
+                        "items": {
+                            "type": "string",
+                            "description": "Set of goals the trainer is interested in",
+                            "enum": [
+                                "gifts",
+                                "exp",
+                                "raids",
+                                "all"
+                            ]
+                        }
+                    },
+                    "isActive": {
+                        "type": "boolean",
+                        "description": "Whether the friend code is active",
+                        "example": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "description": "When the friend code was created",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "description": "When the friend code was last updated",
+                        "format": "date-time"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "description": "When the friend code expires (optional)",
+                        "format": "date-time"
+                    }
+                },
+                "description": "Response object containing friend code information"
             },
             "FriendCodeFeedResponse": {
                 "type": "object",
