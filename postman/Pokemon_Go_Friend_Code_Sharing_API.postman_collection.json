@@ -1,0 +1,897 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Pokemon Go Friend Code Sharing API",
+		"description": "REST API for sharing and managing Pokemon Go friend codes. This API allows trainers to submit their friend codes, search for other trainers, and manage their submissions for easier friend connections in Pokemon Go.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Application health check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test(\"Content-Type is application/json\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "Returns the overall health status of the application including database connectivity."
+					},
+					"response": []
+				},
+				{
+					"name": "Liveness check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health/live",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health",
+								"live"
+							]
+						},
+						"description": "Liveness probe endpoint for Kubernetes health checks."
+					},
+					"response": []
+				},
+				{
+					"name": "Readiness check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health/ready",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health",
+								"ready"
+							]
+						},
+						"description": "Readiness probe endpoint for Kubernetes health checks."
+					},
+					"response": []
+				}
+			],
+			"description": "Application health monitoring endpoints"
+		},
+		{
+			"name": "Friend Codes",
+			"item": [
+				{
+					"name": "Submit Friend Code",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate a random 12-digit friend code",
+									"function generateRandomFriendCode() {",
+									"    let friendCode = '';",
+									"    for (let i = 0; i < 12; i++) {",
+									"        friendCode += Math.floor(Math.random() * 10);",
+									"    }",
+									"    return friendCode;",
+									"}",
+									"",
+									"const randomFriendCode = generateRandomFriendCode();",
+									"pm.environment.set('randomFriendCode', randomFriendCode);",
+									"console.log('Generated random friend code:', randomFriendCode);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson).to.have.property('friendCode');",
+									"    pm.expect(responseJson).to.have.property('trainerName');",
+									"    pm.expect(responseJson).to.have.property('playerLevel');",
+									"    pm.expect(responseJson).to.have.property('location');",
+									"    pm.expect(responseJson).to.have.property('description');",
+									"    pm.expect(responseJson).to.have.property('team');",
+									"    pm.expect(responseJson).to.have.property('goals');",
+									"    pm.expect(responseJson).to.have.property('isActive');",
+									"    pm.expect(responseJson).to.have.property('createdAt');",
+									"    pm.expect(responseJson).to.have.property('updatedAt');",
+									"});",
+									"",
+									"pm.test(\"Friend code is 12 digits\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.friendCode).to.match(/^\\d{12}$/);",
+									"});",
+									"",
+									"pm.test(\"Player level is within valid range\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.playerLevel).to.be.at.least(1);",
+									"    pm.expect(responseJson.playerLevel).to.be.at.most(50);",
+									"});",
+									"",
+									"pm.test(\"Team is valid\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const validTeams = ['mystic', 'valor', 'instinct'];",
+									"    pm.expect(validTeams).to.include(responseJson.team.toLowerCase());",
+									"});",
+									"",
+									"pm.test(\"Goals is an array\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.goals).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"// Save the created friend code ID for use in other tests",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set(\"createdFriendCodeId\", responseJson.id);",
+									"    console.log(\"Saved friend code ID:\", responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"friendCode\": \"{{randomFriendCode}}\",\n  \"trainerName\": \"PikachuMaster\",\n  \"playerLevel\": 35,\n  \"location\": \"New York, NY\",\n  \"description\": \"Looking for daily gift exchanges and raid invites!\",\n  \"team\": \"MYSTIC\",\n  \"goals\": [\"gifts\", \"raids\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes"
+							]
+						},
+						"description": "Creates a new friend code submission with trainer information. This allows Pokemon Go trainers to share their friend codes with the community."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Friend Code - Invalid Format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('status');",
+									"    pm.expect(responseJson).to.have.property('error');",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"    pm.expect(responseJson).to.have.property('timestamp');",
+									"    pm.expect(responseJson).to.have.property('path');",
+									"});",
+									"",
+									"pm.test(\"Error message indicates validation failure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message.toLowerCase()).to.include('validation failed');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"friendCode\": \"12345\",\n  \"trainerName\": \"TestUser\",\n  \"playerLevel\": 25,\n  \"location\": \"Test City\",\n  \"description\": \"Testing invalid friend code\",\n  \"team\": \"VALOR\",\n  \"goals\": [\"gifts\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes"
+							]
+						},
+						"description": "Test submitting a friend code with invalid format (not 12 digits)"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Friend Code - Duplicate",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Use the same friend code from the previous successful request to test duplicate",
+									"const existingFriendCode = pm.environment.get('randomFriendCode');",
+									"if (!existingFriendCode) {",
+									"    // If no existing friend code, generate one (though this test should run after the first one)",
+									"    let friendCode = '';",
+									"    for (let i = 0; i < 12; i++) {",
+									"        friendCode += Math.floor(Math.random() * 10);",
+									"    }",
+									"    pm.environment.set('duplicateFriendCode', friendCode);",
+									"} else {",
+									"    pm.environment.set('duplicateFriendCode', existingFriendCode);",
+									"}",
+									"console.log('Using friend code for duplicate test:', pm.environment.get('duplicateFriendCode'));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 409\", function () {",
+									"    pm.response.to.have.status(409);",
+									"});",
+									"",
+									"pm.test(\"Error response indicates conflict\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('status', 409);",
+									"    pm.expect(responseJson.message.toLowerCase()).to.include('exists');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"friendCode\": \"{{duplicateFriendCode}}\",\n  \"trainerName\": \"DuplicateUser\",\n  \"playerLevel\": 30,\n  \"location\": \"Duplicate City\",\n  \"description\": \"Testing duplicate friend code\",\n  \"team\": \"INSTINCT\",\n  \"goals\": [\"exp\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes"
+							]
+						},
+						"description": "Test submitting a duplicate friend code (should fail with 409 Conflict)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Friend Codes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('content');",
+									"    pm.expect(responseJson).to.have.property('page');",
+									"    pm.expect(responseJson).to.have.property('size');",
+									"    pm.expect(responseJson).to.have.property('totalElements');",
+									"    pm.expect(responseJson).to.have.property('totalPages');",
+									"    pm.expect(responseJson).to.have.property('first');",
+									"    pm.expect(responseJson).to.have.property('last');",
+									"    pm.expect(responseJson).to.have.property('empty');",
+									"});",
+									"",
+									"pm.test(\"Content is an array\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Page and size are numbers\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.page).to.be.a('number');",
+									"    pm.expect(responseJson.size).to.be.a('number');",
+									"});",
+									"",
+									"pm.test(\"Total elements and pages are numbers\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.totalElements).to.be.a('number');",
+									"    pm.expect(responseJson.totalPages).to.be.a('number');",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"// Validate friend code structure if any exist",
+									"pm.test(\"Friend codes have correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.content && responseJson.content.length > 0) {",
+									"        const friendCode = responseJson.content[0];",
+									"        pm.expect(friendCode).to.have.property('id');",
+									"        pm.expect(friendCode).to.have.property('friendCode');",
+									"        pm.expect(friendCode).to.have.property('isActive');",
+									"        pm.expect(friendCode).to.have.property('createdAt');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes?page=0&size=20&sortBy=createdAt&sortDir=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortDir",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Retrieves a paginated list of active friend codes. Supports filtering by location, level range, and search terms."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Friend Codes - With Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('content');",
+									"    pm.expect(responseJson.content).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Results match filter criteria\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.content && responseJson.content.length > 0) {",
+									"        responseJson.content.forEach(friendCode => {",
+									"            // Check location filter if specified",
+									"            if (friendCode.location) {",
+									"                pm.expect(friendCode.location.toLowerCase()).to.include('new york');",
+									"            }",
+									"            // Check level range",
+									"            if (friendCode.playerLevel) {",
+									"                pm.expect(friendCode.playerLevel).to.be.at.least(1);",
+									"                pm.expect(friendCode.playerLevel).to.be.at.most(50);",
+									"            }",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes?page=0&size=10&location=New York&minLevel=1&maxLevel=50&search=casual",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "location",
+									"value": "New York"
+								},
+								{
+									"key": "minLevel",
+									"value": "1"
+								},
+								{
+									"key": "maxLevel",
+									"value": "50"
+								},
+								{
+									"key": "search",
+									"value": "casual"
+								}
+							]
+						},
+						"description": "Test filtering friend codes by location, level range, and search terms."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Friend Code by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson).to.have.property('friendCode');",
+									"    pm.expect(responseJson).to.have.property('trainerName');",
+									"    pm.expect(responseJson).to.have.property('playerLevel');",
+									"    pm.expect(responseJson).to.have.property('isActive');",
+									"    pm.expect(responseJson).to.have.property('createdAt');",
+									"});",
+									"",
+									"pm.test(\"Friend code ID matches request\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const requestedId = pm.environment.get('createdFriendCodeId');",
+									"    if (requestedId) {",
+									"        pm.expect(responseJson.id.toString()).to.equal(requestedId.toString());",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes/{{createdFriendCodeId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes",
+								"{{createdFriendCodeId}}"
+							]
+						},
+						"description": "Retrieves a specific friend code by its unique identifier using the ID saved from the POST request."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Friend Code by ID - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('status', 404);",
+									"    pm.expect(responseJson).to.have.property('error');",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"    pm.expect(responseJson).to.have.property('timestamp');",
+									"    pm.expect(responseJson).to.have.property('path');",
+									"});",
+									"",
+									"pm.test(\"Error message indicates not found\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message.toLowerCase()).to.include('not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes",
+								"999999"
+							]
+						},
+						"description": "Test retrieving a non-existent friend code (should return 404 Not Found)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Friend Code Statistics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains statistical data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('object');",
+									"    // Check for common statistical fields that might be present",
+									"    const possibleFields = ['totalFriendCodes', 'activeFriendCodes', 'inactiveFriendCodes'];",
+									"    let hasStatisticalData = false;",
+									"    possibleFields.forEach(field => {",
+									"        if (responseJson.hasOwnProperty(field)) {",
+									"            hasStatisticalData = true;",
+									"        }",
+									"    });",
+									"    pm.expect(hasStatisticalData).to.be.true;",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes",
+								"stats"
+							]
+						},
+						"description": "Retrieves statistical information about friend code submissions."
+					},
+					"response": []
+				},
+				{
+					"name": "Search Friend Codes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('content');",
+									"    pm.expect(responseJson).to.have.property('page');",
+									"    pm.expect(responseJson).to.have.property('size');",
+									"    pm.expect(responseJson).to.have.property('totalElements');",
+									"    pm.expect(responseJson).to.have.property('totalPages');",
+									"});",
+									"",
+									"pm.test(\"Search results match criteria\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.content && responseJson.content.length > 0) {",
+									"        responseJson.content.forEach(friendCode => {",
+									"            // Verify search criteria are met",
+									"            if (friendCode.trainerName) {",
+									"                pm.expect(friendCode.trainerName.toLowerCase()).to.include('pika');",
+									"            }",
+									"            if (friendCode.location) {",
+									"                pm.expect(friendCode.location.toLowerCase()).to.include('new york');",
+									"            }",
+									"        });",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes/search?trainerName=Pika&location=New York&minLevel=20&maxLevel=40&page=0&size=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes",
+								"search"
+							],
+							"query": [
+								{
+									"key": "trainerName",
+									"value": "Pika"
+								},
+								{
+									"key": "location",
+									"value": "New York"
+								},
+								{
+									"key": "minLevel",
+									"value": "20"
+								},
+								{
+									"key": "maxLevel",
+									"value": "40"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search for friend codes using various search parameters like trainer name, location, and level range."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recent Friend Codes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has pagination structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('content');",
+									"    pm.expect(responseJson).to.have.property('page');",
+									"    pm.expect(responseJson).to.have.property('size');",
+									"    pm.expect(responseJson).to.have.property('totalElements');",
+									"    pm.expect(responseJson).to.have.property('totalPages');",
+									"});",
+									"",
+									"pm.test(\"Recent codes are within time range\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.content && responseJson.content.length > 0) {",
+									"        const now = new Date();",
+									"        const hoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000)); // 24 hours ago",
+									"        ",
+									"        responseJson.content.forEach(friendCode => {",
+									"            if (friendCode.createdAt) {",
+									"                const createdAt = new Date(friendCode.createdAt);",
+									"                pm.expect(createdAt).to.be.above(hoursAgo);",
+									"            }",
+									"        });",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/friend-codes/recent?hours=24&page=0&size=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"friend-codes",
+								"recent"
+							],
+							"query": [
+								{
+									"key": "hours",
+									"value": "24"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Retrieves friend codes created within the specified time window (last 24 hours by default)."
+					},
+					"response": []
+				}
+			],
+			"description": "Pokemon Go friend code management operations"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Log the current request for debugging",
+					"console.log('Making request to:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test to check Content-Type header for non-error responses",
+					"if (pm.response.code < 400) {",
+					"    pm.test(\"Content-Type header is present\", function () {",
+					"        pm.expect(pm.response.headers.get('Content-Type')).to.not.be.null;",
+					"    });",
+					"}",
+					"",
+					"// Log response details for debugging",
+					"console.log('Response status:', pm.response.status);",
+					"console.log('Response time:', pm.response.responseTime + 'ms');"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "{{baseUrl}}",
+			"type": "string"
+		}
+	]
+}
