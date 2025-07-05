@@ -130,6 +130,95 @@ class FriendCodeControllerTest {
         }
 
         @Test
+        @DisplayName("Should accept blank trainer name")
+        void shouldAcceptBlankTrainerName() throws Exception {
+            // Given
+            FriendCodeSubmissionRequest requestWithBlankTrainerName = new FriendCodeSubmissionRequest(
+                "123456789012", "", 25, "New York", "Looking for friends");
+            
+            when(friendCodeService.createFriendCode(anyString(), anyString(), anyInt(), 
+                    anyString(), anyString(), isNull(), isNull(), anyString(), any())).thenReturn(testFriendCode);
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestWithBlankTrainerName)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.friendCode").value("123456789012"));
+
+            verify(friendCodeService).createFriendCode(
+                eq("123456789012"), eq(""), eq(25), 
+                eq("New York"), eq("Looking for friends"), isNull(), isNull(), anyString(), isNull());
+        }
+
+        @Test
+        @DisplayName("Should accept whitespace-only trainer name")
+        void shouldAcceptWhitespaceOnlyTrainerName() throws Exception {
+            // Given
+            FriendCodeSubmissionRequest requestWithWhitespaceTrainerName = new FriendCodeSubmissionRequest(
+                "123456789012", "   ", 25, "New York", "Looking for friends");
+            
+            when(friendCodeService.createFriendCode(anyString(), anyString(), anyInt(), 
+                    anyString(), anyString(), isNull(), isNull(), anyString(), any())).thenReturn(testFriendCode);
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestWithWhitespaceTrainerName)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.friendCode").value("123456789012"));
+
+            verify(friendCodeService).createFriendCode(
+                eq("123456789012"), eq("   "), eq(25), 
+                eq("New York"), eq("Looking for friends"), isNull(), isNull(), anyString(), isNull());
+        }
+
+        @Test
+        @DisplayName("Should accept valid alphanumeric trainer name")
+        void shouldAcceptValidAlphanumericTrainerName() throws Exception {
+            // Given
+            FriendCodeSubmissionRequest requestWithValidTrainerName = new FriendCodeSubmissionRequest(
+                "123456789012", "TrainerABC123", 25, "New York", "Looking for friends");
+            
+            when(friendCodeService.createFriendCode(anyString(), anyString(), anyInt(), 
+                    anyString(), anyString(), isNull(), isNull(), anyString(), any())).thenReturn(testFriendCode);
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestWithValidTrainerName)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.friendCode").value("123456789012"));
+
+            verify(friendCodeService).createFriendCode(
+                eq("123456789012"), eq("TrainerABC123"), eq(25), 
+                eq("New York"), eq("Looking for friends"), isNull(), isNull(), anyString(), isNull());
+        }
+
+        @Test
+        @DisplayName("Should return 400 for trainer name with invalid characters")
+        void shouldReturn400ForTrainerNameWithInvalidCharacters() throws Exception {
+            // Given: trainer name with special characters
+            String invalidTrainerNameJson = "{" +
+                    "\"friendCode\": \"123456789012\"," +
+                    "\"trainerName\": \"Trainer@123!\"," +
+                    "\"playerLevel\": 25}";
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(invalidTrainerNameJson))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.error").value("Validation Error"))
+                    .andExpect(jsonPath("$.message").value("Validation failed"))
+                    .andExpect(jsonPath("$.details").value(org.hamcrest.Matchers.containsString("Trainer name can only contain letters and numbers")));
+        }
+
+        @Test
         @DisplayName("Should return 409 for duplicate friend code")
         void shouldReturn409ForDuplicateFriendCode() throws Exception {
             // Given

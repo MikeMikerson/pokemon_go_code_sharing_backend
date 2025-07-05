@@ -4,6 +4,7 @@ import com.devs.simplicity.poke_go_friends.entity.Goal;
 import com.devs.simplicity.poke_go_friends.entity.Team;
 import com.devs.simplicity.poke_go_friends.validation.ValidTeam;
 import com.devs.simplicity.poke_go_friends.validation.ValidGoals;
+import com.devs.simplicity.poke_go_friends.validation.NotBlankOrPattern;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -33,8 +34,10 @@ public class FriendCodeSubmissionRequest {
     private String friendCode;
 
     @Size(max = 20, message = "Trainer name cannot exceed 20 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9]*$", 
-             message = "Trainer name can only contain letters and numbers")
+    @NotBlankOrPattern(
+        regexp = "^[a-zA-Z0-9]*$", 
+        patternMessage = "Trainer name can only contain letters and numbers"
+    )
     @Schema(
         description = "Pokemon Go trainer name",
         example = "PikachuMaster",
