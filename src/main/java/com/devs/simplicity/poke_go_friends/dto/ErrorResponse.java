@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 
@@ -31,7 +32,8 @@ public class ErrorResponse {
     @Schema(description = "Additional error details", example = "The friendCode field cannot be null or empty")
     private String details;
     
-    @Schema(description = "Timestamp when the error occurred", example = "2025-07-03T04:16:18.278")
+    @Schema(description = "Timestamp when the error occurred", example = "2025-07-03T04:16:18.278Z")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime timestamp;
     
     @Schema(description = "API path where the error occurred", example = "/api/friend-codes")

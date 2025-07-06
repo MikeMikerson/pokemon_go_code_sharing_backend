@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -49,13 +50,16 @@ public class FriendCodeResponse {
     @Schema(description = "Whether the friend code is active", example = "true")
     private Boolean isActive;
     
-    @Schema(description = "When the friend code was created", example = "2025-07-03T04:16:18.278")
+    @Schema(description = "When the friend code was created", example = "2025-07-03T04:16:18.278Z")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime createdAt;
     
-    @Schema(description = "When the friend code was last updated", example = "2025-07-03T04:16:18.278")
+    @Schema(description = "When the friend code was last updated", example = "2025-07-03T04:16:18.278Z")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime updatedAt;
     
-    @Schema(description = "When the friend code expires (optional)", example = "2025-08-03T04:16:18.278")
+    @Schema(description = "When the friend code expires (optional)", example = "2025-08-03T04:16:18.278Z")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
     private LocalDateTime expiresAt;
 
 
