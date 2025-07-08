@@ -20,7 +20,7 @@ The current rate limiting implementation uses an in-memory `ConcurrentHashMap` f
 
 ## Implementation Steps
 
-### Step 1: Infrastructure Setup
+### Step 1: Infrastructure Setup - DONE
 1.  **Add Redis Dependencies**
     -   Update build.gradle to include Spring Data Redis dependencies:
         ```gradle
@@ -51,7 +51,7 @@ The current rate limiting implementation uses an in-memory `ConcurrentHashMap` f
         spring.data.redis.timeout=2000ms
         ```
 
-### Step 2: Create Redis Rate Limiting Service
+### Step 2: Create Redis Rate Limiting Service - DONE
 1.  **RateLimiter Interface**
     -   Create a simple interface for rate limiting operations.
         ```java
@@ -74,7 +74,7 @@ The current rate limiting implementation uses an in-memory `ConcurrentHashMap` f
     -   Implement a simple key structure for rate limiting:
         `rate_limit:{ipAddress}:{endpoint}`
 
-### Step 4: Lua Script for Atomic Operations
+### Step 4: Lua Script for Atomic Operations - DONE
 1.  **Sliding Window Script**
     -   Use the following Lua script to atomically check and increment the rate limit in Redis.
     ```lua
