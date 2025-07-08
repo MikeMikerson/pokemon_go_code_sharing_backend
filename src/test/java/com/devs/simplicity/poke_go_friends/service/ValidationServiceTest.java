@@ -312,12 +312,12 @@ class ValidationServiceTest {
         void shouldAllowWithinUserRateLimit() {
             Long userId = 1L;
             
-            // Mock rate limiter to allow requests (we need to handle the cast to RedisRateLimiter)
-            RedisRateLimiter mockRedisRateLimiter = mock(RedisRateLimiter.class);
-            when(mockRedisRateLimiter.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(true);
+            // Mock rate limiter to allow requests (we need to handle the cast to CircuitBreakerRateLimiter or RedisRateLimiter)
+            CircuitBreakerRateLimiter mockCircuitBreakerRateLimiter = mock(CircuitBreakerRateLimiter.class);
+            when(mockCircuitBreakerRateLimiter.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(true);
             
-            // Create a new validation service with the RedisRateLimiter mock
-            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockRedisRateLimiter);
+            // Create a new validation service with the CircuitBreakerRateLimiter mock
+            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockCircuitBreakerRateLimiter);
             
             // Should allow multiple submissions when rate limiter allows
             for (int i = 0; i < 10; i++) {
@@ -332,11 +332,11 @@ class ValidationServiceTest {
             Long userId = 2L;
             
             // Mock rate limiter to deny requests (rate limit exceeded)
-            RedisRateLimiter mockRedisRateLimiter = mock(RedisRateLimiter.class);
-            when(mockRedisRateLimiter.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(false);
+            CircuitBreakerRateLimiter mockCircuitBreakerRateLimiter = mock(CircuitBreakerRateLimiter.class);
+            when(mockCircuitBreakerRateLimiter.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(false);
             
-            // Create a new validation service with the RedisRateLimiter mock
-            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockRedisRateLimiter);
+            // Create a new validation service with the CircuitBreakerRateLimiter mock
+            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockCircuitBreakerRateLimiter);
             
             // Should be rejected when rate limiter denies
             assertThatThrownBy(() -> testValidationService.checkRateLimitByUser(userId))
@@ -375,12 +375,12 @@ class ValidationServiceTest {
         void shouldGetCurrentRateLimitUsage() {
             String ipAddress = "192.168.1.5";
             
-            // Mock RedisRateLimiter to return specific usage counts
-            RedisRateLimiter mockRedisRateLimiter = mock(RedisRateLimiter.class);
-            when(mockRedisRateLimiter.getCurrentUsage("ip:" + ipAddress + ":submission")).thenReturn(0L, 1L, 2L);
+            // Mock CircuitBreakerRateLimiter to return specific usage counts
+            CircuitBreakerRateLimiter mockCircuitBreakerRateLimiter = mock(CircuitBreakerRateLimiter.class);
+            when(mockCircuitBreakerRateLimiter.getCurrentUsage("ip:" + ipAddress + ":submission")).thenReturn(0L, 1L, 2L);
             
-            // Create a new validation service with the RedisRateLimiter mock
-            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockRedisRateLimiter);
+            // Create a new validation service with the CircuitBreakerRateLimiter mock
+            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockCircuitBreakerRateLimiter);
             
             assertThat(testValidationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(0);
             assertThat(testValidationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(1);

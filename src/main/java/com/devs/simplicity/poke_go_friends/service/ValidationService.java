@@ -231,8 +231,16 @@ public class ValidationService {
         String key = "user:" + userId + ":submission";
         
         // For user rate limiting, we need to use a 24-hour window (86400000ms)
-        // Since RedisRateLimiter uses the default 1-hour window, we need to use the custom method
-        if (rateLimiter instanceof RedisRateLimiter redisRateLimiter) {
+        // Check if the rate limiter supports custom windows
+        if (rateLimiter instanceof CircuitBreakerRateLimiter circuitBreakerRateLimiter) {
+            long dayInMs = 24 * 60 * 60 * 1000L; // 24 hours in milliseconds
+            boolean allowed = circuitBreakerRateLimiter.isAllowed(key, rateLimitConfig.getSubmissionsPerDayPerUser(), dayInMs);
+            
+            if (!allowed) {
+                log.warn("Rate limit exceeded for user: {}", userId);
+                throw new RateLimitExceededException("user:" + userId, "User daily limit");
+            }
+        } else if (rateLimiter instanceof RedisRateLimiter redisRateLimiter) {
             long dayInMs = 24 * 60 * 60 * 1000L; // 24 hours in milliseconds
             boolean allowed = redisRateLimiter.isAllowed(key, rateLimitConfig.getSubmissionsPerDayPerUser(), dayInMs);
             
@@ -318,8 +326,12 @@ public class ValidationService {
     public int getCurrentRateLimitUsage(String ipAddress) {
         String key = "ip:" + ipAddress + ":submission";
         
-        if (rateLimiter instanceof RedisRateLimiter redisRateLimiter) {
+        if (rateLimiter instanceof CircuitBreakerRateLimiter circuitBreakerRateLimiter) {
+            return (int) circuitBreakerRateLimiter.getCurrentUsage(key);
+        } else if (rateLimiter instanceof RedisRateLimiter redisRateLimiter) {
             return (int) redisRateLimiter.getCurrentUsage(key);
+        } else if (rateLimiter instanceof InMemoryRateLimiter inMemoryRateLimiter) {
+            return inMemoryRateLimiter.getCurrentUsage(key);
         }
         
         // Fallback for other implementations - return 0 as we can't determine usage
