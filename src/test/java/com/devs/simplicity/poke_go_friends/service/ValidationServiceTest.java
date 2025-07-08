@@ -14,7 +14,10 @@ import org.mockito.MockitoAnnotations;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 /**
  * Comprehensive unit tests for ValidationService.
@@ -28,6 +31,9 @@ class ValidationServiceTest {
     
     @Mock
     private InputSanitizationService sanitizationService;
+    
+    @Mock
+    private RateLimiter rateLimiter;
 
     @BeforeEach
     void setUp() {
@@ -44,7 +50,10 @@ class ValidationServiceTest {
         when(sanitizationService.sanitizeDescription(anyString())).thenAnswer(i -> i.getArgument(0));
         when(sanitizationService.isValidAfterSanitization(anyString(), anyString())).thenReturn(true);
         
-        validationService = new ValidationService(rateLimitConfig, sanitizationService);
+        // Setup rate limiter to allow requests by default
+        when(rateLimiter.isAllowed(anyString())).thenReturn(true);
+        
+        validationService = new ValidationService(rateLimitConfig, sanitizationService, rateLimiter);
     }
 
     @Nested
@@ -274,7 +283,10 @@ class ValidationServiceTest {
         void shouldAllowWithinIpRateLimit() {
             String ipAddress = "192.168.1.1";
             
-            // Should allow up to 5 submissions per hour per IP
+            // Mock rate limiter to allow requests
+            when(rateLimiter.isAllowed("ip:" + ipAddress + ":submission")).thenReturn(true);
+            
+            // Should allow multiple submissions when rate limiter allows
             for (int i = 0; i < 5; i++) {
                 assertThatNoException().isThrownBy(() -> 
                     validationService.checkRateLimitByIp(ipAddress));
@@ -286,12 +298,10 @@ class ValidationServiceTest {
         void shouldRejectWhenIpRateLimitExceeded() {
             String ipAddress = "192.168.1.2";
             
-            // Exhaust the limit
-            for (int i = 0; i < 5; i++) {
-                validationService.checkRateLimitByIp(ipAddress);
-            }
+            // Mock rate limiter to deny requests (rate limit exceeded)
+            when(rateLimiter.isAllowed("ip:" + ipAddress + ":submission")).thenReturn(false);
             
-            // Next submission should be rejected
+            // Should be rejected when rate limiter denies
             assertThatThrownBy(() -> validationService.checkRateLimitByIp(ipAddress))
                 .isInstanceOf(RateLimitExceededException.class)
                 .hasMessageContaining("Rate limit exceeded");
@@ -302,10 +312,17 @@ class ValidationServiceTest {
         void shouldAllowWithinUserRateLimit() {
             Long userId = 1L;
             
-            // Should allow up to 10 submissions per day per user
+            // Mock rate limiter to allow requests (we need to handle the cast to RedisRateLimiter)
+            RedisRateLimiter mockRedisRateLimiter = mock(RedisRateLimiter.class);
+            when(mockRedisRateLimiter.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(true);
+            
+            // Create a new validation service with the RedisRateLimiter mock
+            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockRedisRateLimiter);
+            
+            // Should allow multiple submissions when rate limiter allows
             for (int i = 0; i < 10; i++) {
                 assertThatNoException().isThrownBy(() -> 
-                    validationService.checkRateLimitByUser(userId));
+                    testValidationService.checkRateLimitByUser(userId));
             }
         }
 
@@ -314,13 +331,15 @@ class ValidationServiceTest {
         void shouldRejectWhenUserRateLimitExceeded() {
             Long userId = 2L;
             
-            // Exhaust the limit
-            for (int i = 0; i < 10; i++) {
-                validationService.checkRateLimitByUser(userId);
-            }
+            // Mock rate limiter to deny requests (rate limit exceeded)
+            RedisRateLimiter mockRedisRateLimiter = mock(RedisRateLimiter.class);
+            when(mockRedisRateLimiter.isAllowed(anyString(), anyInt(), anyLong())).thenReturn(false);
             
-            // Next submission should be rejected
-            assertThatThrownBy(() -> validationService.checkRateLimitByUser(userId))
+            // Create a new validation service with the RedisRateLimiter mock
+            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockRedisRateLimiter);
+            
+            // Should be rejected when rate limiter denies
+            assertThatThrownBy(() -> testValidationService.checkRateLimitByUser(userId))
                 .isInstanceOf(RateLimitExceededException.class)
                 .hasMessageContaining("Rate limit exceeded");
         }
@@ -338,10 +357,13 @@ class ValidationServiceTest {
             String ip1 = "192.168.1.3";
             String ip2 = "192.168.1.4";
             
-            // Exhaust limit for first IP
-            for (int i = 0; i < 5; i++) {
-                validationService.checkRateLimitByIp(ip1);
-            }
+            // Mock rate limiter to deny first IP but allow second IP
+            when(rateLimiter.isAllowed("ip:" + ip1 + ":submission")).thenReturn(false);
+            when(rateLimiter.isAllowed("ip:" + ip2 + ":submission")).thenReturn(true);
+            
+            // First IP should be rejected
+            assertThatThrownBy(() -> validationService.checkRateLimitByIp(ip1))
+                .isInstanceOf(RateLimitExceededException.class);
             
             // Second IP should still be allowed
             assertThatNoException().isThrownBy(() -> 
@@ -353,13 +375,16 @@ class ValidationServiceTest {
         void shouldGetCurrentRateLimitUsage() {
             String ipAddress = "192.168.1.5";
             
-            assertThat(validationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(0);
+            // Mock RedisRateLimiter to return specific usage counts
+            RedisRateLimiter mockRedisRateLimiter = mock(RedisRateLimiter.class);
+            when(mockRedisRateLimiter.getCurrentUsage("ip:" + ipAddress + ":submission")).thenReturn(0L, 1L, 2L);
             
-            validationService.checkRateLimitByIp(ipAddress);
-            assertThat(validationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(1);
+            // Create a new validation service with the RedisRateLimiter mock
+            ValidationService testValidationService = new ValidationService(rateLimitConfig, sanitizationService, mockRedisRateLimiter);
             
-            validationService.checkRateLimitByIp(ipAddress);
-            assertThat(validationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(2);
+            assertThat(testValidationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(0);
+            assertThat(testValidationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(1);
+            assertThat(testValidationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(2);
         }
     }
 
@@ -404,14 +429,10 @@ class ValidationServiceTest {
             String ipAddress = "192.168.1.13";
             Long userId = 10L;
             
-            // Exhaust the IP rate limit
-            for (int i = 0; i < 5; i++) {
-                validationService.validateFriendCodeSubmission(
-                    "12345678901" + i, "Trainer" + i, 25, "New York", 
-                    "Looking for friends", ipAddress, userId);
-            }
+            // Mock rate limiter to deny IP requests (rate limit exceeded)
+            when(rateLimiter.isAllowed("ip:" + ipAddress + ":submission")).thenReturn(false);
             
-            // Next submission should be rejected
+            // Next submission should be rejected due to IP rate limit
             assertThatThrownBy(() -> 
                 validationService.validateFriendCodeSubmission(
                     "123456789015", "TestTrainer", 25, "New York", 
@@ -427,17 +448,9 @@ class ValidationServiceTest {
         @Test
         @DisplayName("Should clean up rate limit data")
         void shouldCleanUpRateLimitData() {
-            String ipAddress = "192.168.1.20";
-            
-            // Add some submissions
-            validationService.checkRateLimitByIp(ipAddress);
-            validationService.checkRateLimitByIp(ipAddress);
-            
-            assertThat(validationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(2);
-            
-            // Cleanup should not affect recent entries
-            validationService.cleanupRateLimitData();
-            assertThat(validationService.getCurrentRateLimitUsage(ipAddress)).isEqualTo(2);
+            // With Redis-based rate limiting, cleanup is handled automatically
+            // This test just ensures the method doesn't throw exceptions
+            assertThatNoException().isThrownBy(() -> validationService.cleanupRateLimitData());
         }
     }
 }

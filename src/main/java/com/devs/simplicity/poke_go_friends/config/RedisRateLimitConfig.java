@@ -18,7 +18,7 @@ public class RedisRateLimitConfig {
     private long defaultWindowSizeMs = 3600000L; // 1 hour
     
     /**
-     * Default request limit per window.
+     * Default request limit per window (matches IP hourly limit from RateLimitConfig).
      */
     private int defaultLimit = 5;
     

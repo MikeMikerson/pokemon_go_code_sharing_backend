@@ -11,9 +11,6 @@ import org.springframework.util.StringUtils;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -27,6 +24,7 @@ public class ValidationService {
 
     private final RateLimitConfig rateLimitConfig;
     private final InputSanitizationService sanitizationService;
+    private final RateLimiter rateLimiter;
 
     // Friend code validation pattern (exactly 12 digits)
     private static final Pattern FRIEND_CODE_PATTERN = Pattern.compile("^\\d{12}$");
@@ -36,12 +34,6 @@ public class ValidationService {
     
     // Pattern to detect suspicious character sequences
     private static final Pattern SUSPICIOUS_PATTERN = Pattern.compile("(.)\\1{4,}"); // 5+ repeated chars
-    
-    // Rate limiting storage (in production, use Redis or proper cache)
-    private final ConcurrentHashMap<String, RateLimitData> rateLimitMap = new ConcurrentHashMap<>();
-    
-    // Configurable rate limits (use configuration values)
-    // Default values are overridden by RateLimitConfig
     
     // Enhanced inappropriate content detection
     private static final Set<String> INAPPROPRIATE_WORDS = new HashSet<>(Arrays.asList(
@@ -213,21 +205,13 @@ public class ValidationService {
         
         log.debug("Checking rate limit for IP: {}", ipAddress);
         
-        String key = "ip:" + ipAddress;
-        RateLimitData limitData = rateLimitMap.computeIfAbsent(key, k -> new RateLimitData());
+        String key = "ip:" + ipAddress + ":submission";
         
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneHourAgo = now.minus(1, ChronoUnit.HOURS);
-        
-        // Clean up old entries
-        limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneHourAgo));
-        
-        if (limitData.getTimestamps().size() >= rateLimitConfig.getSubmissionsPerHourPerIp()) {
+        if (!rateLimiter.isAllowed(key)) {
             log.warn("Rate limit exceeded for IP: {}", ipAddress);
             throw new RateLimitExceededException(ipAddress, "IP hourly limit");
         }
         
-        limitData.getTimestamps().add(now);
         log.debug("Rate limit check passed for IP: {}", ipAddress);
     }
 
@@ -244,21 +228,26 @@ public class ValidationService {
 
         log.debug("Checking rate limit for user: {}", userId);
         
-        String key = "user:" + userId;
-        RateLimitData limitData = rateLimitMap.computeIfAbsent(key, k -> new RateLimitData());
+        String key = "user:" + userId + ":submission";
         
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneDayAgo = now.minus(1, ChronoUnit.DAYS);
-        
-        // Clean up old entries
-        limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneDayAgo));
-        
-        if (limitData.getTimestamps().size() >= rateLimitConfig.getSubmissionsPerDayPerUser()) {
-            log.warn("Rate limit exceeded for user: {}", userId);
-            throw new RateLimitExceededException("user:" + userId, "User daily limit");
+        // For user rate limiting, we need to use a 24-hour window (86400000ms)
+        // Since RedisRateLimiter uses the default 1-hour window, we need to use the custom method
+        if (rateLimiter instanceof RedisRateLimiter redisRateLimiter) {
+            long dayInMs = 24 * 60 * 60 * 1000L; // 24 hours in milliseconds
+            boolean allowed = redisRateLimiter.isAllowed(key, rateLimitConfig.getSubmissionsPerDayPerUser(), dayInMs);
+            
+            if (!allowed) {
+                log.warn("Rate limit exceeded for user: {}", userId);
+                throw new RateLimitExceededException("user:" + userId, "User daily limit");
+            }
+        } else {
+            // Fallback for other RateLimiter implementations
+            if (!rateLimiter.isAllowed(key)) {
+                log.warn("Rate limit exceeded for user: {}", userId);
+                throw new RateLimitExceededException("user:" + userId, "User daily limit");
+            }
         }
         
-        limitData.getTimestamps().add(now);
         log.debug("Rate limit check passed for user: {}", userId);
     }
 
@@ -312,19 +301,12 @@ public class ValidationService {
 
     /**
      * Cleans up old rate limiting data (should be called periodically).
+     * 
+     * Note: With Redis-based rate limiting, cleanup is handled automatically
+     * by the Redis expiration mechanism, so this method is effectively a no-op.
      */
     public void cleanupRateLimitData() {
-        log.debug("Cleaning up old rate limiting data");
-        
-        LocalDateTime cutoff = LocalDateTime.now().minus(24, ChronoUnit.HOURS);
-        
-        rateLimitMap.entrySet().removeIf(entry -> {
-            RateLimitData data = entry.getValue();
-            data.getTimestamps().removeIf(timestamp -> timestamp.isBefore(cutoff));
-            return data.getTimestamps().isEmpty();
-        });
-        
-        log.debug("Rate limiting data cleanup completed");
+        log.debug("Rate limiting cleanup - Redis handles automatic expiration");
     }
 
     /**
@@ -334,27 +316,14 @@ public class ValidationService {
      * @return current usage count within the hour
      */
     public int getCurrentRateLimitUsage(String ipAddress) {
-        String key = "ip:" + ipAddress;
-        RateLimitData limitData = rateLimitMap.get(key);
+        String key = "ip:" + ipAddress + ":submission";
         
-        if (limitData == null) {
-            return 0;
+        if (rateLimiter instanceof RedisRateLimiter redisRateLimiter) {
+            return (int) redisRateLimiter.getCurrentUsage(key);
         }
         
-        LocalDateTime oneHourAgo = LocalDateTime.now().minus(1, ChronoUnit.HOURS);
-        limitData.getTimestamps().removeIf(timestamp -> timestamp.isBefore(oneHourAgo));
-        
-        return limitData.getTimestamps().size();
+        // Fallback for other implementations - return 0 as we can't determine usage
+        return 0;
     }
 
-    /**
-     * Data structure for storing rate limiting information.
-     */
-    private static class RateLimitData {
-        private final Set<LocalDateTime> timestamps = ConcurrentHashMap.newKeySet();
-        
-        public Set<LocalDateTime> getTimestamps() {
-            return timestamps;
-        }
-    }
 }
