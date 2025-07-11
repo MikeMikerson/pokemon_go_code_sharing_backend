@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poke-go-backend
+spec:
+  template:
+    spec:
+      containers:
+      - name: backend
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "dev"
+        - name: DATABASE_URL
+          value: "jdbc:postgresql://postgres:5432/poke_go_friends_dev"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "125m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"

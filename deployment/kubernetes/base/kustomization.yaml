@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: poke-go-friends-base
+
+resources:
+  - secrets.yaml
+  - postgres.yaml
+  - redis.yaml
+  - backend.yaml
+  - ingress.yaml
+
+commonLabels:
+  app: poke-go-friends
+  version: v1
+
+images:
+  - name: localhost:5000/poke-go-backend
+    newTag: latest
