@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:7-alpine
+          image: ghcr.io/mikemikerson/redis:7-alpine
           ports:
             - containerPort: 6379
           volumeMounts:

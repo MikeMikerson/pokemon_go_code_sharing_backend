@@ -16,5 +16,5 @@ commonLabels:
   version: v1
 
 images:
-  - name: localhost:5000/poke-go-backend
+  - name: ghcr.io/mikemikerson/poke-go-friends-backend
     newTag: latest

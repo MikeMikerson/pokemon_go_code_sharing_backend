@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: localhost:5000/poke-go-backend:latest
+          image: ghcr.io/mikemikerson/poke-go-friends-backend:latest
           ports:
             - containerPort: 8080
           env:

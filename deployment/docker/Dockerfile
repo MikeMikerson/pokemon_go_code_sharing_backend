@@ -1,5 +1,5 @@
 # Use OpenJDK 21 as the base image
-FROM amazoncorretto:21-alpine-jdk AS build
+FROM ghcr.io/mikemikerson/amazoncorretto:21-alpine-jdk AS build
 
 # Set working directory
 WORKDIR /app
@@ -24,7 +24,7 @@ COPY src src
 RUN ./gradlew build -x test --no-daemon
 
 # Create the runtime image
-FROM amazoncorretto:21-alpine-jdk
+FROM ghcr.io/mikemikerson/amazoncorretto:21-alpine-jdk
 
 # Set working directory
 WORKDIR /app

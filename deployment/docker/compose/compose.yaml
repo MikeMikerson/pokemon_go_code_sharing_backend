@@ -9,7 +9,7 @@ services:
     networks:
       - spring-postgres
   db:
-    image: postgres
+    image: ghcr.io/mikemikerson/postgres:15-alpine
     restart: always
     secrets:
       - db-password
@@ -23,7 +23,7 @@ services:
     expose:
       - 5432
   redis:
-    image: redis:7-alpine
+    image: ghcr.io/mikemikerson/redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
