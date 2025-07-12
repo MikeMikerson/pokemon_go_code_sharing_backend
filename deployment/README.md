@@ -78,7 +78,7 @@ kubectl get deployments -l app=poke-go-friends
 - **Namespace**: Uses `dev-` prefix for all resources
 - **Replicas**: 1 instance of each service
 - **Resources**: Lower CPU/memory limits
-- **Database**: `poke_go_friends_dev`
+- **Database**: `poke_go_friends`
 - **Profile**: `dev`
 
 ### Production Environment

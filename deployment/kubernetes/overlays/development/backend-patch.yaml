@@ -11,7 +11,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "dev"
         - name: DATABASE_URL
-          value: "jdbc:postgresql://postgres:5432/poke_go_friends_dev"
+          value: "jdbc:postgresql://postgres:5432/poke_go_friends"
         resources:
           requests:
             memory: "256Mi"

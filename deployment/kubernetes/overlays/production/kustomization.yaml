@@ -9,8 +9,8 @@ resources:
 
 namePrefix: prod-
 
-patchesStrategicMerge:
-  - backend-patch.yaml
+patches:
+  - path: backend-patch.yaml
 
 replicas:
   - name: poke-go-backend

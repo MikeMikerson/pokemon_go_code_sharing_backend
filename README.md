@@ -161,7 +161,7 @@ For detailed information, see [docs/CI_CD_PIPELINE.md](docs/CI_CD_PIPELINE.md).
 
 ```properties
 # Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/poke_go_friends_dev
+spring.datasource.url=jdbc:postgresql://localhost:5432/poke_go_friends
 spring.datasource.username=postgres
 spring.datasource.password=${DATABASE_PASSWORD}
 
