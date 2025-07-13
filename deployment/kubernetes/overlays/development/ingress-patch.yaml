@@ -3,27 +3,16 @@ kind: Ingress
 metadata:
   name: poke-go-backend-ingress
   annotations:
-    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    cert-manager.io/cluster-issuer: 'letsencrypt-staging'
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - api.justpokefriends.com
     - dev.api.justpokefriends.com
-    secretName: backend-tls
+    secretName: backend-dev-tls
   rules:
-    - host: api.justpokefriends.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: poke-go-backend
-                port:
-                  number: 8080
     - host: dev.api.justpokefriends.com
       http:
         paths:

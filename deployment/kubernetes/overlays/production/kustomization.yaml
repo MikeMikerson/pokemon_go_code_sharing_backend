@@ -11,6 +11,7 @@ namePrefix: prod-
 
 patches:
   - path: backend-patch.yaml
+  - path: ingress-patch.yaml
 
 replicas:
   - name: poke-go-backend

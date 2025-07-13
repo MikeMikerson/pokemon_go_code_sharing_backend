@@ -10,3 +10,4 @@ resources:
   - redis.yaml
   - backend.yaml
   - ingress.yaml
+  - cluster-issuer.yaml
