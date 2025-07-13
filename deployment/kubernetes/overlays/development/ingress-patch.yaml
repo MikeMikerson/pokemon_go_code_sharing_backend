@@ -3,15 +3,9 @@ kind: Ingress
 metadata:
   name: poke-go-backend-ingress
   annotations:
-    cert-manager.io/cluster-issuer: 'letsencrypt-staging'
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # SSL/TLS will be handled manually for dev environment
 spec:
   ingressClassName: nginx
-  tls:
-  - hosts:
-    - dev.api.justpokefriends.com
-    secretName: backend-dev-tls
   rules:
     - host: dev.api.justpokefriends.com
       http:

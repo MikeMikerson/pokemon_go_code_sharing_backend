@@ -3,15 +3,9 @@ kind: Ingress
 metadata:
   name: frontend-prod-ingress
   annotations:
-    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # SSL/TLS will be handled manually for production frontend
 spec:
   ingressClassName: nginx
-  tls:
-  - hosts:
-    - www.justpokefriends.com
-    secretName: frontend-prod-tls
   rules:
     - host: www.justpokefriends.com
       http:

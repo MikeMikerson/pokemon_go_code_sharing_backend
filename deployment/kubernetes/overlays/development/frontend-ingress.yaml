@@ -3,19 +3,13 @@ kind: Ingress
 metadata:
   name: frontend-dev-ingress
   annotations:
-    cert-manager.io/cluster-issuer: 'letsencrypt-staging'
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # SSL/TLS will be handled manually for dev frontend
     # Add basic auth to restrict access to dev frontend
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: dev-basic-auth
     nginx.ingress.kubernetes.io/auth-realm: 'Development Environment - Restricted Access'
 spec:
   ingressClassName: nginx
-  tls:
-  - hosts:
-    - dev.justpokefriends.com
-    secretName: frontend-dev-tls
   rules:
     - host: dev.justpokefriends.com
       http:
