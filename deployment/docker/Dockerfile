@@ -4,7 +4,6 @@ FROM ghcr.io/mikemikerson/amazoncorretto:21-alpine-jdk AS build
 # Set working directory
 WORKDIR /app
 
-
 # Copy Gradle wrapper and build files first (to leverage cache for dependencies)
 COPY gradlew .
 COPY gradle gradle
