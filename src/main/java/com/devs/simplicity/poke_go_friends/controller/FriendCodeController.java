@@ -26,6 +26,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+
 /**
  * REST Controller for friend code operations.
  * Provides endpoints for creating, reading, updating, and deleting friend codes.
@@ -83,6 +85,7 @@ public class FriendCodeController {
             )
         )
     })
+    @RateLimiter(name = "friendCodeSubmissionLimiter")
     public ResponseEntity<FriendCodeResponse> submitFriendCode(
             @Valid @RequestBody FriendCodeSubmissionRequest request,
             HttpServletRequest httpRequest,
