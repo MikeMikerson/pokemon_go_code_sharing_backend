@@ -2,6 +2,7 @@ package com.devs.simplicity.poke_go_friends.controller;
 
 import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
 import com.devs.simplicity.poke_go_friends.exception.*;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -310,5 +311,20 @@ public class GlobalExceptionHandler {
         );
         
         return ResponseEntity.internalServerError().body(errorResponse);
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(
+            RequestNotPermitted ex, WebRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                "Rate Limit Exceeded",
+                "Apologies, users may only submit 2 friend codes per hour. Please try again later.",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponse);
     }
 }
