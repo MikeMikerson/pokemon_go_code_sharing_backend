@@ -1,9 +1,11 @@
 package com.devs.simplicity.poke_go_friends.dto;
 
+import com.devs.simplicity.poke_go_friends.entity.FriendCode;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -25,11 +27,12 @@ public class FriendCodeFeedResponse {
     private boolean first;
     private boolean last;
     private boolean empty;
+    private boolean rateLimited;
 
     /**
      * Factory method to create feed response from Spring Data Page.
      */
-    public static FriendCodeFeedResponse fromPage(org.springframework.data.domain.Page<com.devs.simplicity.poke_go_friends.entity.FriendCode> page) {
+    public static FriendCodeFeedResponse fromPage(Page<FriendCode> page) {
         List<FriendCodeResponse> content = page.getContent().stream()
                 .map(FriendCodeResponse::fromEntity)
                 .toList();
@@ -42,7 +45,8 @@ public class FriendCodeFeedResponse {
             page.getTotalPages(),
             page.isFirst(),
             page.isLast(),
-            page.isEmpty()
+            page.isEmpty(),
+            false
         );
     }
 
@@ -53,5 +57,6 @@ public class FriendCodeFeedResponse {
         this.content = content;
         this.totalElements = content.size();
         this.empty = content.isEmpty();
+        this.rateLimited = false;
     }
 }

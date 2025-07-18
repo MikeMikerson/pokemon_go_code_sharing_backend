@@ -38,7 +38,7 @@ class FriendCodeFeedResponseTest {
 
             // Act
             FriendCodeFeedResponse response = new FriendCodeFeedResponse(
-                content, 0, 20, 2L, 1, true, true, false);
+                content, 0, 20, 2L, 1, true, true, false, false);
 
             // Assert
             assertThat(response.getContent()).hasSize(2);

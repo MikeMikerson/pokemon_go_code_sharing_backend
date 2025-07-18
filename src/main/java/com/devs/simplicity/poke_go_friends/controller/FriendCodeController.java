@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
@@ -157,7 +158,9 @@ public class FriendCodeController {
             @Parameter(description = "Maximum player level", example = "50")
             @RequestParam(required = false) Integer maxLevel,
             @Parameter(description = "Search term for trainer name or description", example = "casual")
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            HttpServletRequest httpRequest,
+            @RequestHeader(value = "X-User-ID", required = false) Long userId) {
         
         log.debug("Fetching friend codes - page: {}, size: {}, location: {}, levels: {}-{}, search: {}", 
                  page, size, location, minLevel, maxLevel, search);
@@ -177,12 +180,15 @@ public class FriendCodeController {
             friendCodesPage = friendCodeService.getActiveFriendCodes(pageable);
         }
         
-        FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
-        
-        log.debug("Returning {} friend codes out of {} total", 
-                 response.getContent().size(), response.getTotalElements());
-        
-        return ResponseEntity.ok(response);
+    FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
+    String ipAddress = getClientIpAddress(httpRequest);
+    boolean rateLimited = friendCodeService.isSubmissionRateLimited(ipAddress, userId);
+    response.setRateLimited(rateLimited);
+
+    log.debug("Returning {} friend codes out of {} total", 
+         response.getContent().size(), response.getTotalElements());
+
+    return ResponseEntity.ok(response);
     }
 
     /**
@@ -235,7 +241,9 @@ public class FriendCodeController {
             @RequestParam(required = false) Integer minLevel,
             @RequestParam(required = false) Integer maxLevel,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest,
+            @RequestHeader(value = "X-User-ID", required = false) Long userId) {
         
         log.debug("Searching friend codes - trainer: {}, location: {}, levels: {}-{}", 
                  trainerName, location, minLevel, maxLevel);
@@ -261,11 +269,14 @@ public class FriendCodeController {
             friendCodesPage = friendCodeService.getActiveFriendCodes(pageable);
         }
         
-        FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
-        
-        log.debug("Search returned {} friend codes", response.getContent().size());
-        
-        return ResponseEntity.ok(response);
+    FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
+    String ipAddress = getClientIpAddress(httpRequest);
+    boolean rateLimited = friendCodeService.isSubmissionRateLimited(ipAddress, userId);
+    response.setRateLimited(rateLimited);
+
+    log.debug("Search returned {} friend codes", response.getContent().size());
+
+    return ResponseEntity.ok(response);
     }
 
     /**
@@ -276,7 +287,9 @@ public class FriendCodeController {
     public ResponseEntity<FriendCodeFeedResponse> getRecentFriendCodes(
             @RequestParam(defaultValue = "24") int hours,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest,
+            @RequestHeader(value = "X-User-ID", required = false) Long userId) {
         
         log.debug("Fetching friend codes from last {} hours", hours);
         
@@ -286,9 +299,11 @@ public class FriendCodeController {
         Pageable pageable = PageRequest.of(page, size, sort);
         
         Page<FriendCode> friendCodesPage = friendCodeService.getRecentSubmissions(hours, pageable);
-        FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
-        
-        return ResponseEntity.ok(response);
+    FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
+    String ipAddress = getClientIpAddress(httpRequest);
+    boolean rateLimited = friendCodeService.isSubmissionRateLimited(ipAddress, userId);
+    response.setRateLimited(rateLimited);
+    return ResponseEntity.ok(response);
     }
 
     /**

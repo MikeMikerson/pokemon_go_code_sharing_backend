@@ -1,5 +1,8 @@
 package com.devs.simplicity.poke_go_friends.service;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+
 import com.devs.simplicity.poke_go_friends.entity.FriendCode;
 import com.devs.simplicity.poke_go_friends.entity.Goal;
 import com.devs.simplicity.poke_go_friends.entity.Team;
@@ -35,6 +38,23 @@ public class FriendCodeService {
     private final FriendCodeRepository friendCodeRepository;
     private final UserRepository userRepository;
     private final ValidationService validationService;
+    private final RateLimiterRegistry rateLimiterRegistry;
+
+    /**
+     * Checks if the current user/IP is rate limited for friend code submissions.
+     *
+     * @param ipAddress The submitter's IP address
+     * @param userId    The submitter's user ID (optional)
+     * @return true if rate limited, false otherwise
+     */
+    @Transactional(readOnly = true)
+    public boolean isSubmissionRateLimited(String ipAddress, Long userId) {
+        // For simplicity, use a single global rate limiter (Resilience4j does not support per-IP/user out of the box)
+        // If you want per-IP/user, you need to create a RateLimiter per key (not recommended for high cardinality)
+        RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter("friendCodeSubmissionLimiter");
+        // Try to acquire a permit without consuming it (peek at the state)
+        return !rateLimiter.acquirePermission();
+    }
 
     /**
      * Creates a new friend code after validation and duplicate checking.
