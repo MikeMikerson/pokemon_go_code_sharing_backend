@@ -85,15 +85,12 @@ public class FriendCodeController {
     })
     public ResponseEntity<FriendCodeResponse> submitFriendCode(
             @Valid @RequestBody FriendCodeSubmissionRequest request,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest,
+            @RequestHeader(value = "X-User-ID", required = false) Long userId) {
         
         log.info("Received friend code submission for trainer: {}", request.getTrainerName());
         
         String ipAddress = getClientIpAddress(httpRequest);
-        
-        // For now, we'll support anonymous submissions (userId = null)
-        // In the future, authentication can be added to extract userId from JWT token
-        Long userId = null;
         
         FriendCode createdFriendCode = friendCodeService.createFriendCode(
             request.getFriendCode(),

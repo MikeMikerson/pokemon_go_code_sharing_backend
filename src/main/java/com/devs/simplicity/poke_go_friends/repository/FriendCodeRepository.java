@@ -5,6 +5,7 @@ import com.devs.simplicity.poke_go_friends.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -220,4 +221,15 @@ public interface FriendCodeRepository extends JpaRepository<FriendCode, Long> {
                                                       @Param("searchText") String searchText,
                                                       @Param("currentTime") LocalDateTime currentTime,
                                                       Pageable pageable);
+
+    /**
+     * Delete friend codes created before the specified timestamp.
+     * This is used for cleanup of old friend codes.
+     *
+     * @param timestamp The cutoff timestamp - friend codes created before this will be deleted
+     * @return The number of friend codes deleted
+     */
+    @Modifying
+    @Query("DELETE FROM FriendCode fc WHERE fc.createdAt < :timestamp")
+    int deleteByCreatedAtBefore(@Param("timestamp") LocalDateTime timestamp);
 }

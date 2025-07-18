@@ -199,6 +199,53 @@ class FriendCodeControllerTest {
         }
 
         @Test
+        @DisplayName("Should return 429 when user exceeds daily friend code creation limit")
+        void shouldReturn429WhenUserExceedsDailyLimit() throws Exception {
+            // Given
+            when(friendCodeService.createFriendCode(anyString(), anyString(), anyInt(), 
+                    anyString(), anyString(), isNull(), isNull(), anyString(), eq(123L)))
+                    .thenThrow(new RateLimitExceededException("user:123:submission", "User daily limit"));
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-User-ID", "123")
+                    .content(objectMapper.writeValueAsString(validSubmissionRequest)))
+                    .andExpect(status().isTooManyRequests())
+                    .andExpect(jsonPath("$.status").value(429))
+                    .andExpect(jsonPath("$.error").value("Rate Limit Exceeded"))
+                    .andExpect(jsonPath("$.message").value("Too many requests. Please try again later."))
+                    .andExpect(jsonPath("$.details").value(org.hamcrest.Matchers.containsString("User daily limit")));
+
+            verify(friendCodeService).createFriendCode(
+                eq("123456789012"), eq("TestTrainer"), eq(25), 
+                eq("New York"), eq("Looking for friends"), isNull(), isNull(), anyString(), eq(123L));
+        }
+
+        @Test
+        @DisplayName("Should allow user to create friend code when under daily limit")
+        void shouldAllowUserToCreateFriendCodeUnderDailyLimit() throws Exception {
+            // Given
+            when(friendCodeService.createFriendCode(anyString(), anyString(), anyInt(), 
+                    anyString(), anyString(), isNull(), isNull(), anyString(), eq(123L)))
+                    .thenReturn(testFriendCode);
+
+            // When & Then
+            mockMvc.perform(post("/api/friend-codes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-User-ID", "123")
+                    .content(objectMapper.writeValueAsString(validSubmissionRequest)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(1))
+                    .andExpect(jsonPath("$.friendCode").value("123456789012"))
+                    .andExpect(jsonPath("$.trainerName").value("TestTrainer"));
+
+            verify(friendCodeService).createFriendCode(
+                eq("123456789012"), eq("TestTrainer"), eq(25), 
+                eq("New York"), eq("Looking for friends"), isNull(), isNull(), anyString(), eq(123L));
+        }
+
+        @Test
         @DisplayName("Should return 400 for trainer name with invalid characters")
         void shouldReturn400ForTrainerNameWithInvalidCharacters() throws Exception {
             // Given: trainer name with special characters
