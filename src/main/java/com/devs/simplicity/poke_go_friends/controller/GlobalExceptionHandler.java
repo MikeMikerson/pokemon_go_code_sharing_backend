@@ -140,8 +140,24 @@ public class GlobalExceptionHandler {
         
         log.warn("Type mismatch error: {}", ex.getMessage());
         
-        String message = String.format("Invalid value '%s' for parameter '%s'", 
-                                      ex.getValue(), ex.getName());
+        String message;
+        
+        // Check if the cause is from our custom converter with a more specific message
+        Throwable rootCause = ex.getCause();
+        while (rootCause != null && rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+        
+        if (rootCause instanceof IllegalArgumentException && 
+            rootCause.getMessage() != null && 
+            rootCause.getMessage().contains("Valid values are:")) {
+            // Use the custom converter's detailed error message
+            message = rootCause.getMessage();
+        } else {
+            // Use the default generic message
+            message = String.format("Invalid value '%s' for parameter '%s'", 
+                                   ex.getValue(), ex.getName());
+        }
         
         ErrorResponse errorResponse = new ErrorResponse(
             HttpStatus.BAD_REQUEST.value(),
