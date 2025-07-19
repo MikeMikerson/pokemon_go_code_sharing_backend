@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.springframework.util.StringUtils;
 
 /**
  * Data Transfer Object for friend code search criteria.
@@ -46,10 +47,10 @@ public class FriendCodeSearchCriteria {
      * @return true if at least one filter is specified, false otherwise
      */
     public boolean hasFilters() {
-        return location != null ||
+        return StringUtils.hasText(location) ||
                team != null ||
                minLevel != null ||
                maxLevel != null ||
-               searchText != null;
+               StringUtils.hasText(searchText);
     }
 }
