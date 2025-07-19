@@ -3,6 +3,7 @@ package com.devs.simplicity.poke_go_friends.service;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 
+import com.devs.simplicity.poke_go_friends.dto.FriendCodeSearchCriteria;
 import com.devs.simplicity.poke_go_friends.entity.FriendCode;
 import com.devs.simplicity.poke_go_friends.entity.Goal;
 import com.devs.simplicity.poke_go_friends.entity.Team;
@@ -11,10 +12,12 @@ import com.devs.simplicity.poke_go_friends.exception.DuplicateFriendCodeExceptio
 import com.devs.simplicity.poke_go_friends.exception.FriendCodeNotFoundException;
 import com.devs.simplicity.poke_go_friends.repository.FriendCodeRepository;
 import com.devs.simplicity.poke_go_friends.repository.UserRepository;
+import com.devs.simplicity.poke_go_friends.repository.specification.FriendCodeSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -280,6 +283,33 @@ public class FriendCodeService {
         
         return friendCodeRepository.findActiveFriendCodesWithFilters(
                 location, minLevel, maxLevel, searchText, LocalDateTime.now(), pageable);
+    }
+
+    /**
+     * Advanced search with multiple filters using JPA Specifications.
+     * This method supports all filter types including team filtering.
+     *
+     * @param criteria Search criteria containing all filter parameters
+     * @param pageable Pagination information
+     * @return Page of friend codes matching the criteria
+     */
+    @Transactional(readOnly = true)
+    public Page<FriendCode> searchWithCriteria(FriendCodeSearchCriteria criteria, Pageable pageable) {
+        log.debug("Searching friend codes with criteria - Location: {}, Team: {}, Level: {}-{}, Text: {}",
+                 criteria.getLocation(), criteria.getTeam(), criteria.getMinLevel(), criteria.getMaxLevel(), criteria.getSearchText());
+
+        // Validate level inputs if provided
+        if (criteria.getMinLevel() != null) {
+            validationService.validatePlayerLevel(criteria.getMinLevel());
+        }
+        if (criteria.getMaxLevel() != null) {
+            validationService.validatePlayerLevel(criteria.getMaxLevel());
+        }
+
+        // Use JPA Specifications for dynamic query building
+        Specification<FriendCode> specification = FriendCodeSpecifications.withCriteria(criteria, LocalDateTime.now());
+
+        return friendCodeRepository.findAll(specification, pageable);
     }
 
     /**

@@ -3,8 +3,10 @@ package com.devs.simplicity.poke_go_friends.controller;
 import com.devs.simplicity.poke_go_friends.dto.ErrorResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeFeedResponse;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeResponse;
+import com.devs.simplicity.poke_go_friends.dto.FriendCodeSearchCriteria;
 import com.devs.simplicity.poke_go_friends.dto.FriendCodeSubmissionRequest;
 import com.devs.simplicity.poke_go_friends.entity.FriendCode;
+import com.devs.simplicity.poke_go_friends.entity.Team;
 import com.devs.simplicity.poke_go_friends.service.FriendCodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -153,6 +155,8 @@ public class FriendCodeController {
             @RequestParam(defaultValue = "desc") String sortDir,
             @Parameter(description = "Filter by location", example = "New York")
             @RequestParam(required = false) String location,
+            @Parameter(description = "Filter by Pokemon Go team", example = "MYSTIC")
+            @RequestParam(required = false) Team team,
             @Parameter(description = "Minimum player level", example = "1")
             @RequestParam(required = false) Integer minLevel,
             @Parameter(description = "Maximum player level", example = "50")
@@ -162,9 +166,9 @@ public class FriendCodeController {
             HttpServletRequest httpRequest,
             @RequestHeader(value = "X-User-ID", required = false) Long userId) {
         
-        log.debug("Fetching friend codes - page: {}, size: {}, location: {}, levels: {}-{}, search: {}", 
-                 page, size, location, minLevel, maxLevel, search);
-        
+        log.debug("Fetching friend codes - page: {}, size: {}, location: {}, team: {}, levels: {}-{}, search: {}",
+                 page, size, location, team, minLevel, maxLevel, search);
+
         // Validate and limit page size
         size = Math.min(size, 100); // Maximum 100 items per page
         
@@ -173,22 +177,31 @@ public class FriendCodeController {
         
         Page<FriendCode> friendCodesPage;
         
-        // Use advanced search if any filters are provided
-        if (StringUtils.hasText(location) || minLevel != null || maxLevel != null || StringUtils.hasText(search)) {
-            friendCodesPage = friendCodeService.searchWithFilters(location, minLevel, maxLevel, search, pageable);
+        // Create search criteria object
+        FriendCodeSearchCriteria criteria = FriendCodeSearchCriteria.builder()
+                .location(location)
+                .team(team)
+                .minLevel(minLevel)
+                .maxLevel(maxLevel)
+                .searchText(search)
+                .build();
+
+        // Use advanced search if any filters are provided, otherwise get all active codes
+        if (criteria.hasFilters()) {
+            friendCodesPage = friendCodeService.searchWithCriteria(criteria, pageable);
         } else {
             friendCodesPage = friendCodeService.getActiveFriendCodes(pageable);
         }
         
-    FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
-    String ipAddress = getClientIpAddress(httpRequest);
-    boolean rateLimited = friendCodeService.isSubmissionRateLimited(ipAddress, userId);
-    response.setRateLimited(rateLimited);
+        FriendCodeFeedResponse response = FriendCodeFeedResponse.fromPage(friendCodesPage);
+        String ipAddress = getClientIpAddress(httpRequest);
+        boolean rateLimited = friendCodeService.isSubmissionRateLimited(ipAddress, userId);
+        response.setRateLimited(rateLimited);
 
-    log.debug("Returning {} friend codes out of {} total", 
-         response.getContent().size(), response.getTotalElements());
+        log.debug("Returning {} friend codes out of {} total",
+             response.getContent().size(), response.getTotalElements());
 
-    return ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     /**
