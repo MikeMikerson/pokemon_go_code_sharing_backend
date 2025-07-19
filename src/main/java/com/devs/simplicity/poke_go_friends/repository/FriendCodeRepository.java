@@ -5,6 +5,7 @@ import com.devs.simplicity.poke_go_friends.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,9 +18,10 @@ import java.util.Optional;
 /**
  * Repository interface for FriendCode entity.
  * Provides custom queries for finding, filtering, and searching friend codes.
+ * Extends JpaSpecificationExecutor for dynamic query building.
  */
 @Repository
-public interface FriendCodeRepository extends JpaRepository<FriendCode, Long> {
+public interface FriendCodeRepository extends JpaRepository<FriendCode, Long>, JpaSpecificationExecutor<FriendCode> {
 
     /**
      * Find all active friend codes (not expired and isActive = true).
