@@ -21,8 +21,10 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -500,6 +502,144 @@ class FriendCodeServiceTest {
             // Then
             assertThat(result.getContent()).hasSize(1);
             verify(friendCodeRepository).findRecentSubmissions(any(LocalDateTime.class), eq(testPageable));
+        }
+    }
+
+    @Nested
+    @DisplayName("Reddit Scraper Batch Insertion Tests")
+    class RedditScraperBatchInsertionTests {
+
+        @Test
+        @DisplayName("Should add new friend codes from Reddit scraper")
+        void shouldAddNewFriendCodesFromRedditScraper() {
+            // Given
+            Set<String> friendCodes = Set.of("123456789012", "987654321098", "456789012345");
+            
+            // Mock that none of the codes exist
+            when(friendCodeRepository.findByFriendCode(anyString()))
+                .thenReturn(Optional.empty());
+            
+            when(friendCodeRepository.save(any(FriendCode.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+            // When
+            int result = friendCodeService.addFriendCodesFromScraper(friendCodes);
+
+            // Then
+            assertThat(result).isEqualTo(3);
+            verify(friendCodeRepository, times(3)).findByFriendCode(anyString());
+            verify(friendCodeRepository, times(3)).save(any(FriendCode.class));
+        }
+
+        @Test
+        @DisplayName("Should skip duplicate friend codes from Reddit scraper")
+        void shouldSkipDuplicateFriendCodesFromRedditScraper() {
+            // Given
+            Set<String> friendCodes = Set.of("123456789012", "987654321098");
+            
+            // Mock that one code already exists
+            when(friendCodeRepository.findByFriendCode("123456789012"))
+                .thenReturn(Optional.of(testFriendCode));
+            when(friendCodeRepository.findByFriendCode("987654321098"))
+                .thenReturn(Optional.empty());
+            
+            when(friendCodeRepository.save(any(FriendCode.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+            // When
+            int result = friendCodeService.addFriendCodesFromScraper(friendCodes);
+
+            // Then
+            assertThat(result).isEqualTo(1);  // Only 1 new code added
+            verify(friendCodeRepository, times(2)).findByFriendCode(anyString());
+            verify(friendCodeRepository, times(1)).save(any(FriendCode.class));  // Only save the new one
+        }
+
+        @Test
+        @DisplayName("Should handle empty friend code set gracefully")
+        void shouldHandleEmptyFriendCodeSetGracefully() {
+            // Given
+            Set<String> friendCodes = Collections.emptySet();
+
+            // When
+            int result = friendCodeService.addFriendCodesFromScraper(friendCodes);
+
+            // Then
+            assertThat(result).isEqualTo(0);
+            verify(friendCodeRepository, never()).findByFriendCode(anyString());
+            verify(friendCodeRepository, never()).save(any(FriendCode.class));
+        }
+
+        @Test
+        @DisplayName("Should handle null friend code set gracefully")
+        void shouldHandleNullFriendCodeSetGracefully() {
+            // Given
+            Set<String> friendCodes = null;
+
+            // When
+            int result = friendCodeService.addFriendCodesFromScraper(friendCodes);
+
+            // Then
+            assertThat(result).isEqualTo(0);
+            verify(friendCodeRepository, never()).findByFriendCode(anyString());
+            verify(friendCodeRepository, never()).save(any(FriendCode.class));
+        }
+
+        @Test
+        @DisplayName("Should continue processing when individual save fails")
+        void shouldContinueProcessingWhenIndividualSaveFails() {
+            // Given
+            Set<String> friendCodes = Set.of("123456789012", "987654321098", "456789012345");
+            
+            when(friendCodeRepository.findByFriendCode(anyString()))
+                .thenReturn(Optional.empty());
+            
+            // Mock that saving one code fails
+            when(friendCodeRepository.save(any(FriendCode.class)))
+                .thenReturn(testFriendCode)  // First save succeeds
+                .thenThrow(new RuntimeException("Database error"))  // Second save fails
+                .thenReturn(testFriendCode);  // Third save succeeds
+
+            // When
+            int result = friendCodeService.addFriendCodesFromScraper(friendCodes);
+
+            // Then
+            assertThat(result).isEqualTo(2);  // 2 out of 3 saved successfully
+            verify(friendCodeRepository, times(3)).findByFriendCode(anyString());
+            verify(friendCodeRepository, times(3)).save(any(FriendCode.class));
+        }
+
+        @Test
+        @DisplayName("Should create friend codes with null trainer level, team, and goals")
+        void shouldCreateFriendCodesWithNullTrainerLevelTeamAndGoals() {
+            // Given
+            Set<String> friendCodes = Set.of("123456789012");
+            
+            when(friendCodeRepository.findByFriendCode(anyString()))
+                .thenReturn(Optional.empty());
+            
+            when(friendCodeRepository.save(any(FriendCode.class)))
+                .thenAnswer(invocation -> {
+                    FriendCode savedCode = invocation.getArgument(0);
+                    
+                    // Verify that the required fields are null
+                    assertThat(savedCode.getPlayerLevel()).isNull();
+                    assertThat(savedCode.getTeam()).isNull();
+                    assertThat(savedCode.getGoals()).isNotNull().isEmpty();
+                    assertThat(savedCode.getTrainerName()).isNull();
+                    assertThat(savedCode.getUser()).isNull();
+                    assertThat(savedCode.getFriendCode()).isEqualTo("123456789012");
+                    assertThat(savedCode.getDescription()).isNull();
+                    
+                    return savedCode;
+                });
+
+            // When
+            int result = friendCodeService.addFriendCodesFromScraper(friendCodes);
+
+            // Then
+            assertThat(result).isEqualTo(1);
+            verify(friendCodeRepository).save(any(FriendCode.class));
         }
     }
 }

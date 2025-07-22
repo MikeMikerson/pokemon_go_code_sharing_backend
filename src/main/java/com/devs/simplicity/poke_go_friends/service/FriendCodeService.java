@@ -435,6 +435,70 @@ public class FriendCodeService {
     }
 
     /**
+     * Adds friend codes from the Reddit scraper to the database.
+     * This method handles batch insertion of friend codes extracted from Reddit posts.
+     * It gracefully handles duplicates by checking for existing codes before saving.
+     * All scraped codes have trainer_level, team, and goals set to null.
+     *
+     * @param friendCodes Set of unique 12-digit friend codes from Reddit scraper
+     * @return Number of new friend codes successfully added to the database
+     */
+    public int addFriendCodesFromScraper(Set<String> friendCodes) {
+        if (friendCodes == null || friendCodes.isEmpty()) {
+            log.debug("No friend codes provided for batch insertion");
+            return 0;
+        }
+
+        log.info("Processing {} friend codes from Reddit scraper", friendCodes.size());
+        
+        int newCodesCount = 0;
+        int duplicatesCount = 0;
+        
+        for (String friendCode : friendCodes) {
+            try {
+                // Check if friend code already exists
+                Optional<FriendCode> existingCode = friendCodeRepository.findByFriendCode(friendCode);
+                
+                if (existingCode.isPresent()) {
+                    duplicatesCount++;
+                    log.debug("Skipping duplicate friend code: {}", friendCode);
+                    continue;
+                }
+                
+                // Create new friend code with minimal data
+                // Note: Using a generic trainer name since Reddit doesn't provide consistent trainer names
+                FriendCode newFriendCode = new FriendCode(
+                    friendCode, 
+                    null, // trainerName - set to null as it's not available from Reddit
+                    null, // playerLevel - set to null as specified in requirements
+                    null, // location - set to null as not consistently available
+                    null, // description
+                    null, // team - set to null as specified in requirements
+                    null  // goals - set to null as specified in requirements
+                );
+                
+                // Set user to null for scraped codes (anonymous)
+                newFriendCode.setUser(null);
+                
+                friendCodeRepository.save(newFriendCode);
+                newCodesCount++;
+                
+                log.debug("Successfully added friend code from Reddit: {}", friendCode);
+                
+            } catch (Exception e) {
+                log.warn("Failed to save friend code {} from Reddit scraper: {}", 
+                        friendCode, e.getMessage());
+                // Continue processing other codes even if one fails
+            }
+        }
+        
+        log.info("Reddit scraper batch insertion completed: {} new codes added, {} duplicates skipped", 
+                newCodesCount, duplicatesCount);
+        
+        return newCodesCount;
+    }
+
+    /**
      * Gets statistics about friend codes.
      *
      * @return Statistics object with various counts
