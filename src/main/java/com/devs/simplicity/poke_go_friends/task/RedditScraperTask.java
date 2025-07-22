@@ -23,7 +23,7 @@ public class RedditScraperTask {
      * Scheduled method to fetch and save friend codes from Reddit.
      * Runs every hour at minute 0.
      */
-    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(cron = "${reddit.scraper.cron}")
     public void scrapeAndSaveFriendCodes() {
         log.info("Starting scheduled Reddit friend code scraping task");
         try {
